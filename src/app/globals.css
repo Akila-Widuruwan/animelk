@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #7c5cff;
+  --color-accent: #6a5cff;
+  --color-violet-2: #9b82ff;
+  --color-blue-2: #6a5cff;
+  --color-ink: #050713;
+  --color-panel: #0b1020;
+  --color-panel-2: #151b30;
+  --color-footer: #070a14;
+  --color-body: #a7aec4;
+  --color-muted: #767e99;
+}
+
+@theme inline {
+  --font-sans: var(--font-inter);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-ink);
+  color: var(--color-body);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.15) transparent;
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgb(255 255 255 / 0.15);
+    border-radius: 999px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@utility bg-gradient-btn {
+  background-image: linear-gradient(90deg, #9b82ff 0%, #7c5cff 50%, #6a5cff 100%);
+}
+
+@utility text-gradient {
+  background-image: linear-gradient(90deg, #9b82ff, #6a5cff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility rank-stroke {
+  -webkit-text-stroke: 2px rgb(255 255 255 / 0.22);
+  color: transparent;
+}
+
+/* Responsive site container:
+   mobile 24px gutters -> desktop min(1500px, 100% - 100px) */
+@utility container-site {
+  width: calc(100% - 24px);
+  margin-inline: auto;
+  @media (min-width: 640px) {
+    width: calc(100% - 48px);
+  }
+  @media (min-width: 1024px) {
+    width: calc(100% - 80px);
+  }
+  @media (min-width: 1280px) {
+    width: min(1400px, calc(100% - 100px));
+  }
+  @media (min-width: 1536px) {
+    width: min(1500px, calc(100% - 100px));
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.7s ease both;
+}
+
+@keyframes eq {
+  0%,
+  100% {
+    height: 10px;
+  }
+  50% {
+    height: 56px;
+  }
+}
+
+.eq-bar {
+  height: 10px;
+  animation: eq 1s ease-in-out infinite;
+}

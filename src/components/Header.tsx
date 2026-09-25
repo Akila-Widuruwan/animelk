@@ -1,0 +1,203 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import {
+  IconChevronDown,
+  IconClose,
+  IconMenu,
+  IconPlay,
+  IconUser,
+} from "./Icons";
+import SearchBox from "./SearchBox";
+
+const MENU = [
+  { label: "Home", href: "/#hero", sub: false },
+  { label: "Anime", href: "/#browse", sub: true },
+  { label: "Movies", href: "/#anime-movies", sub: false },
+  { label: "Series", href: "/#new-series", sub: false },
+  { label: "Genres", href: "/#categories", sub: true },
+  { label: "Top Airing", href: "/#airing", sub: false, badge: "New" },
+  { label: "Request", href: "/#contact", sub: false },
+];
+
+export default function Header({ solid = false }: { solid?: boolean }) {
+  const [sticky, setSticky] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
+
+  const isSticky = solid || sticky;
+
+  useEffect(() => {
+    const onScroll = () => setSticky(window.scrollY > 60);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!accountOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setAccountOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [accountOpen]);
+
+  return (
+    <>
+      <header
+        className={`${isSticky ? "fixed" : "absolute"} inset-x-0 top-0 z-40 transition-colors duration-300 ${
+          isSticky
+            ? "bg-ink/90 shadow-[0_10px_30px_rgba(0,0,0,0.45)]"
+            : "bg-gradient-to-b from-ink/80 via-ink/30 to-transparent"
+        }`}
+      >
+        <div className="container-site flex h-[72px] items-center gap-4">
+          <Link href="/" className="flex shrink-0 items-center gap-2.5">
+            <span className="bg-gradient-btn flex h-9 w-9 items-center justify-center rounded-xl shadow-[0_6px_18px_rgba(124,92,255,0.45)]">
+              <IconPlay className="h-4 w-4 text-white" />
+            </span>
+            <span className="text-[20px] font-extrabold tracking-tight text-white">
+              ANIME<span className="text-gradient">LK</span>
+            </span>
+          </Link>
+
+          <nav className="hidden flex-1 items-center justify-center gap-0.5 xl:flex">
+            {MENU.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={`group relative flex items-center gap-1 rounded-lg px-3 py-2 text-[13.5px] font-semibold transition ${
+                  item.label === "Home"
+                    ? "text-white"
+                    : "text-white/65 hover:text-white"
+                }`}
+              >
+                {item.label}
+                {item.sub && (
+                  <IconChevronDown className="h-3.5 w-3.5 opacity-60 transition group-hover:rotate-180" />
+                )}
+                {item.badge && (
+                  <span className="bg-gradient-btn absolute -top-0.5 right-0.5 rounded px-1.5 py-px text-[9px] font-bold text-white">
+                    {item.badge}
+                  </span>
+                )}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="flex flex-1 items-center justify-end gap-2.5 xl:flex-none">
+            <div className="hidden md:block">
+              <SearchBox />
+            </div>
+
+            <div className="relative hidden lg:block" ref={accountRef}>
+              <button
+                onClick={() => setAccountOpen((v) => !v)}
+                className="flex h-10 items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3.5 text-[13px] font-semibold text-white transition hover:border-primary/60"
+                aria-label="Account"
+              >
+                <IconUser className="h-4 w-4" />
+                <IconChevronDown
+                  className={`h-3.5 w-3.5 opacity-70 transition duration-300 ${
+                    accountOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {accountOpen && (
+                <div className="absolute right-0 top-full z-50 mt-3 w-[230px] overflow-hidden rounded-xl border border-white/10 bg-panel/95 shadow-[0_20px_50px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+                  <div className="border-b border-white/5 px-4 py-3.5">
+                    <p className="text-sm font-bold text-white">Welcome to ANIMELK</p>
+                    <p className="mt-1 text-xs leading-relaxed text-muted">
+                      Sign in to manage your watchlist
+                    </p>
+                  </div>
+                  <div className="p-2">
+                    <Link
+                      href="#"
+                      onClick={() => setAccountOpen(false)}
+                      className="block rounded-lg px-3 py-2.5 text-[13px] font-semibold text-white/85 transition hover:bg-white/5 hover:text-white"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="#"
+                      onClick={() => setAccountOpen(false)}
+                      className="bg-gradient-btn mt-1 block rounded-lg px-3 py-2.5 text-center text-[13px] font-bold text-white transition hover:opacity-90"
+                    >
+                      Create Account
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Link
+              href="#"
+              className="bg-gradient-btn hidden rounded-full px-5 py-2.5 text-[13px] font-bold text-white shadow-[0_6px_18px_rgba(124,92,255,0.4)] transition hover:opacity-90 md:inline-flex"
+            >
+              Sign Up
+            </Link>
+
+            <button
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white xl:hidden"
+              onClick={() => setOpen(true)}
+              aria-label="Open menu"
+            >
+              <IconMenu className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {open && (
+        <div className="fixed inset-0 z-50 xl:hidden">
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setOpen(false)}
+          />
+          <div className="absolute left-0 top-0 flex h-full w-[300px] flex-col gap-6 overflow-y-auto border-r border-white/[0.06] bg-panel/95 p-6 backdrop-blur-xl">
+            <div className="flex items-center justify-between">
+              <span className="text-[19px] font-extrabold text-white">
+                ANIME<span className="text-gradient">LK</span>
+              </span>
+              <button
+                onClick={() => setOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-white"
+                aria-label="Close menu"
+              >
+                <IconClose className="h-4 w-4" />
+              </button>
+            </div>
+            <label className="relative">
+              <SearchBox onNavigate={() => setOpen(false)} />
+            </label>
+            <nav className="flex flex-col gap-1">
+              {MENU.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-white/80 transition hover:bg-white/5 hover:text-white"
+                >
+                  {item.label}
+                  {item.sub && <IconChevronDown className="h-4 w-4 opacity-70" />}
+                </Link>
+              ))}
+            </nav>
+            <Link
+              href="#"
+              className="bg-gradient-btn rounded-full px-5 py-3 text-center text-sm font-bold text-white"
+            >
+              Sign Up
+            </Link>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

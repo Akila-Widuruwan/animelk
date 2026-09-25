@@ -1,0 +1,139 @@
+2026-09-25T11:53:33.075465Z  INFO tailwindcss_oxide::scanner: Provided sources:
+2026-09-25T11:53:33.076073Z  INFO tailwindcss_oxide::scanner: Source: PublicSourceEntry { base: "C:\\Users\\Akila Widuruwan\\Documents\\animelk", pattern: "**/*", negated: false }
+2026-09-25T11:53:33.077822Z  INFO tailwindcss_oxide::scanner: Optimized sources:
+2026-09-25T11:53:33.077866Z  INFO tailwindcss_oxide::scanner: Source: Auto { base: "C:\\Users\\Akila Widuruwan\\Documents\\animelk" }
+2026-09-25T11:53:33.079492Z  INFO discover_sources: tailwindcss_oxide::scanner: enter
+2026-09-25T11:53:33.079519Z  INFO discover_sources:walk_synchronous: tailwindcss_oxide::scanner: enter
+2026-09-25T11:53:33.087894Z  INFO discover_sources:walk_synchronous: tailwindcss_oxide::scanner: exit
+2026-09-25T11:53:33.088776Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\qa-mobile.cjs"
+2026-09-25T11:53:33.088778Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\AGENTS.md"
+2026-09-25T11:53:33.088775Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-nav.cjs"
+2026-09-25T11:53:33.088855Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\Browse.tsx"
+2026-09-25T11:53:33.088882Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\app\\layout.tsx"
+2026-09-25T11:53:33.088883Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-account.cjs"
+2026-09-25T11:53:33.089024Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-admin.cjs"
+2026-09-25T11:53:33.089027Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-nav2.cjs"
+2026-09-25T11:53:33.089037Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\Carousel.tsx"
+2026-09-25T11:53:33.089048Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\ui\\Reveal.tsx"
+2026-09-25T11:53:33.089105Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-autoplay.cjs"
+2026-09-25T11:53:33.089134Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-new-anime.cjs"
+2026-09-25T11:53:33.089164Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\app\\page.tsx"
+2026-09-25T11:53:33.089172Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\CategoryTiles.tsx"
+2026-09-25T11:53:33.089186Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-autosync.cjs"
+2026-09-25T11:53:33.089193Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\ui\\SkeletonCard.tsx"
+2026-09-25T11:53:33.089231Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\lib\\db.ts"
+2026-09-25T11:53:33.089250Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\app\\search\\page.tsx"
+2026-09-25T11:53:33.089256Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-badges.cjs"
+2026-09-25T11:53:33.089260Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\Footer.tsx"
+2026-09-25T11:53:33.089273Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-overlay.cjs"
+2026-09-25T11:53:33.089310Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\lib\\supabase-browser.ts"
+2026-09-25T11:53:33.089323Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-console.cjs"
+2026-09-25T11:53:33.089324Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\watch\\AnimeWatchInfo.tsx"
+2026-09-25T11:53:33.089474Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\admin\\AnimeManager.tsx"
+2026-09-25T11:53:33.089543Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\watch\\EpisodeSidebar.tsx"
+2026-09-25T11:53:33.089335Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\HashScroll.tsx"
+2026-09-25T11:53:33.089558Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\admin\\EpisodesManager.tsx"
+2026-09-25T11:53:33.089632Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\admin\\HeroManager.tsx"
+2026-09-25T11:53:33.089634Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\app\\admin\\page.tsx"
+2026-09-25T11:53:33.089648Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\Header.tsx"
+2026-09-25T11:53:33.089360Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\qa-mobile2.cjs"
+2026-09-25T11:53:33.089702Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\admin\\LibraryImport.tsx"
+2026-09-25T11:53:33.089719Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\Hero.tsx"
+2026-09-25T11:53:33.089733Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\WatchPlayer.tsx"
+2026-09-25T11:53:33.089766Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\app\\anime\\[id]\\loading.tsx"
+2026-09-25T11:53:33.089786Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\admin\\Login.tsx"
+2026-09-25T11:53:33.089792Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\Icons.tsx"
+2026-09-25T11:53:33.089813Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\qa-navbar.cjs"
+2026-09-25T11:53:33.089849Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\app\\anime\\[id]\\page.tsx"
+2026-09-25T11:53:33.089852Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\admin\\MenuManager.tsx"
+2026-09-25T11:53:33.089859Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\LibrarySlider.tsx"
+2026-09-25T11:53:33.089364Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-pages.cjs"
+2026-09-25T11:53:33.089905Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\qa-viewports.cjs"
+2026-09-25T11:53:33.089929Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\MediaRow.tsx"
+2026-09-25T11:53:33.089931Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\admin\\SectionsManager.tsx"
+2026-09-25T11:53:33.089967Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\data\\anime.json"
+2026-09-25T11:53:33.089996Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\qa-watch.cjs"
+2026-09-25T11:53:33.090013Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\SearchBox.tsx"
+2026-09-25T11:53:33.090023Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-player.cjs"
+2026-09-25T11:53:33.090089Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\SectionHeading.tsx"
+2026-09-25T11:53:33.090117Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\supabase\\migrations\\0002_subtitles.sql"
+2026-09-25T11:53:33.090150Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\CLAUDE.md"
+2026-09-25T11:53:33.090165Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\app\\anime\\[id]\\watch\\loading.tsx"
+2026-09-25T11:53:33.090208Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\admin\\SettingsManager.tsx"
+2026-09-25T11:53:33.090212Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-counts.mjs"
+2026-09-25T11:53:33.090233Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\lib\\anime.ts"
+2026-09-25T11:53:33.090243Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-proxy.cjs"
+2026-09-25T11:53:33.090072Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\qa-watch2.cjs"
+2026-09-25T11:53:33.090283Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\TopTen.tsx"
+2026-09-25T11:53:33.090328Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-proxy2.cjs"
+2026-09-25T11:53:33.090293Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\admin\\TopicsManager.tsx"
+2026-09-25T11:53:33.090396Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\app\\anime\\[id]\\watch\\page.tsx"
+2026-09-25T11:53:33.090427Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-proxy3.cjs"
+2026-09-25T11:53:33.090441Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\admin\\ui.tsx"
+2026-09-25T11:53:33.090497Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-proxy4.cjs"
+2026-09-25T11:53:33.090518Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\supabase\\migrations\\0001_init.sql"
+2026-09-25T11:53:33.090523Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\AnimeCard.tsx"
+2026-09-25T11:53:33.090524Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\app\\api\\library\\route.ts"
+2026-09-25T11:53:33.090561Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-proxy5.cjs"
+2026-09-25T11:53:33.090602Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-subnotice.cjs"
+2026-09-25T11:53:33.090613Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\app\\api\\search\\route.ts"
+2026-09-25T11:53:33.090628Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\components\\TrailerButton.tsx"
+2026-09-25T11:53:33.090663Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-subs.cjs"
+2026-09-25T11:53:33.090704Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\netlify.toml"
+2026-09-25T11:53:33.090833Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\package.json"
+2026-09-25T11:53:33.090909Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\eslint.config.mjs"
+2026-09-25T11:53:33.090925Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-db.mjs"
+2026-09-25T11:53:33.090945Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\SUPABASE_SETUP.md"
+2026-09-25T11:53:33.090963Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-sections.cjs"
+2026-09-25T11:53:33.091001Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-images.cjs"
+2026-09-25T11:53:33.091066Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-items.mjs"
+2026-09-25T11:53:33.091129Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\supabase\\seed.sql"
+2026-09-25T11:53:33.091314Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\tsconfig.json"
+2026-09-25T11:53:33.091320Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-hero.cjs"
+2026-09-25T11:53:33.091435Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\debug-nav.cjs"
+2026-09-25T11:53:33.091445Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-subs.mjs"
+2026-09-25T11:53:33.091471Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\public\\file.svg"
+2026-09-25T11:53:33.091483Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\public\\next.svg"
+2026-09-25T11:53:33.091511Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\next.config.ts"
+2026-09-25T11:53:33.091505Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\postcss.config.mjs"
+2026-09-25T11:53:33.091534Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-tmdb.cjs"
+2026-09-25T11:53:33.091555Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-movie.cjs"
+2026-09-25T11:53:33.091580Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-schema.mjs"
+2026-09-25T11:53:33.091599Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-trailer.cjs"
+2026-09-25T11:53:33.091599Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-episodes.mjs"
+2026-09-25T11:53:33.091614Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-key.mjs"
+2026-09-25T11:53:33.091620Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-watch.cjs"
+2026-09-25T11:53:33.091628Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\public\\window.svg"
+2026-09-25T11:53:33.091638Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\qa-drawer2.cjs"
+2026-09-25T11:53:33.091653Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\public\\globe.svg"
+2026-09-25T11:53:33.091661Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\check-widths.cjs"
+2026-09-25T11:53:33.091664Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\qa-fixes.cjs"
+2026-09-25T11:53:33.091678Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\qa-drawer.cjs"
+2026-09-25T11:53:33.091751Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\README.md"
+2026-09-25T11:53:33.091902Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\fetch-anime.mjs"
+2026-09-25T11:53:33.091948Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\public\\vercel.svg"
+2026-09-25T11:53:33.091966Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\generate-seed.mjs"
+2026-09-25T11:53:33.092026Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\scripts\\inspect-bundle.mjs"
+2026-09-25T11:53:33.092093Z  INFO discover_sources: tailwindcss_oxide::scanner: exit
+2026-09-25T11:53:33.092101Z  INFO extract_candidates: tailwindcss_oxide::scanner: enter
+2026-09-25T11:53:33.092104Z  INFO extract_candidates:parse_all_blobs: tailwindcss_oxide::scanner: enter
+2026-09-25T11:53:33.092108Z  INFO extract_candidates:parse_all_blobs:extract: tailwindcss_oxide::scanner: enter
+2026-09-25T11:53:33.094546Z  INFO extract_candidates:parse_all_blobs:extract: tailwindcss_oxide::scanner: exit
+2026-09-25T11:53:33.094673Z  INFO extract_candidates:parse_all_blobs: tailwindcss_oxide::scanner: exit
+2026-09-25T11:53:33.094683Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: enter
+2026-09-25T11:53:33.094685Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: Reading 1 file(s)
+2026-09-25T11:53:33.094780Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: Reading "C:\\Users\\Akila Widuruwan\\Documents\\animelk\\src\\app\\globals.css"
+2026-09-25T11:53:33.094786Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: exit
+2026-09-25T11:53:33.094790Z  INFO extract_candidates:extract_css_variables: tailwindcss_oxide::scanner: enter
+2026-09-25T11:53:33.094795Z  INFO extract_candidates:extract_css_variables:extract: tailwindcss_oxide::scanner: enter
+2026-09-25T11:53:33.094841Z  INFO extract_candidates:extract_css_variables:extract: tailwindcss_oxide::scanner: exit
+2026-09-25T11:53:33.094854Z  INFO extract_candidates:extract_css_variables: tailwindcss_oxide::scanner: exit
+2026-09-25T11:53:33.095494Z  INFO extract_candidates: tailwindcss_oxide::scanner: exit
+2026-09-25T11:53:33.096912Z  INFO get_files: tailwindcss_oxide::scanner: enter
+2026-09-25T11:53:33.096939Z  INFO get_files:discover_sources: tailwindcss_oxide::scanner: enter
+2026-09-25T11:53:33.096944Z  INFO get_files:discover_sources: tailwindcss_oxide::scanner: exit
+2026-09-25T11:53:33.097060Z  INFO get_files: tailwindcss_oxide::scanner: exit
+2026-09-25T11:53:33.097809Z  INFO get_globs: tailwindcss_oxide::scanner: enter
+2026-09-25T11:53:33.097822Z  INFO get_globs:discover_sources: tailwindcss_oxide::scanner: enter
+2026-09-25T11:53:33.097825Z  INFO get_globs:discover_sources: tailwindcss_oxide::scanner: exit
+2026-09-25T11:53:33.105280Z  INFO get_globs: tailwindcss_oxide::scanner: exit
