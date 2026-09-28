@@ -72,8 +72,8 @@ function Column({
 export default function Footer() {
   return (
     <footer id="contact" className="border-t border-white/[0.06] bg-footer">
-      <div className="container-site pb-10 pt-16">
-        <div className="grid gap-12 md:grid-cols-2 xl:grid-cols-[1.5fr_1fr_1fr_1fr]">
+      <div className="container-site pb-10 pt-12 md:pt-16">
+        <div className="grid gap-8 md:grid-cols-2 md:gap-12 xl:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div>
             <Link href="/" className="flex items-center gap-2.5">
               <span className="bg-gradient-btn flex h-9 w-9 items-center justify-center rounded-xl">
@@ -174,11 +174,11 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-14 flex flex-col items-center justify-between gap-3 border-t border-white/[0.06] pt-6 md:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/[0.06] pt-6 md:mt-14 md:flex-row">
           <p className="text-[13px] text-muted">
             Copyright © 2026 ANIMELK. All rights reserved.
           </p>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
             <Link href="#" className="text-[13px] font-medium text-muted transition hover:text-violet-2">
               Privacy Policy
             </Link>

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
-import Hls from "hls.js";
 import type { Anime } from "@/lib/anime";
+import type { SubtitleTrack } from "@/lib/db";
 import { IconPlay } from "./Icons";
+import CustomPlayer from "./CustomPlayer";
 
 const VIDEO_EXT = /\.(mp4|webm|ogv|ogg|mov|m4v)(\?|$)/i;
 const HLS_EXT = /\.(m3u8)(\?|$)/i;
@@ -15,6 +16,7 @@ interface Props {
   videoUrl: string | null;
   episodeTitle?: string | null;
   hasEpisodeRow?: boolean;
+  subtitles?: SubtitleTrack[];
 }
 
 export default function WatchPlayer({
@@ -23,35 +25,13 @@ export default function WatchPlayer({
   videoUrl,
   episodeTitle,
   hasEpisodeRow,
+  subtitles = [],
 }: Props) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [error, setError] = useState("");
   const [demo, setDemo] = useState(false);
 
   const isHls = !!videoUrl && HLS_EXT.test(videoUrl);
   const isDirect = !!videoUrl && VIDEO_EXT.test(videoUrl);
   const isEmbed = !!videoUrl && !isHls && !isDirect;
-
-  useEffect(() => {
-    if (!isHls || !videoRef.current || !videoUrl) return;
-    if (Hls.isSupported()) {
-      const hls = new Hls();
-      hls.loadSource(videoUrl);
-      hls.attachMedia(videoRef.current);
-      hls.on(Hls.Events.ERROR, (_e, data) => {
-        if (data.fatal) {
-          setError("Stream failed to load. Check the episode URL in Admin → Episodes.");
-          hls.destroy();
-        }
-      });
-      return () => hls.destroy();
-    }
-    if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
-      videoRef.current.src = videoUrl;
-    } else {
-      setError("This browser cannot play HLS streams.");
-    }
-  }, [isHls, videoUrl]);
 
   if (isEmbed) {
     return (
@@ -70,36 +50,13 @@ export default function WatchPlayer({
 
   if (isDirect || isHls) {
     return (
-      <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black shadow-[0_30px_80px_rgba(0,0,0,0.45)] ring-1 ring-white/[0.06]">
-        <video
-          key={videoUrl}
-          ref={videoRef}
-          controls
-          autoPlay
-          playsInline
-          poster={anime.bannerImage || anime.coverImage || undefined}
-          className="h-full w-full"
-          onError={() =>
-            setError("Failed to load video. Check the episode URL in Admin → Episodes.")
-          }
-        >
-          {isDirect && <source src={videoUrl} />}
-        </video>
-        <span className="pointer-events-none absolute left-4 top-4 rounded bg-black/70 px-2.5 py-1 text-xs font-bold text-white">
-          EP {ep}
-        </span>
-        {error && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[#05060f]/95 p-6 text-center">
-            <p className="text-sm font-semibold text-red-300">{error}</p>
-            <button
-              onClick={() => setError("")}
-              className="rounded-full border border-white/15 px-5 py-2 text-[13px] font-semibold text-white transition hover:border-primary hover:bg-primary/20"
-            >
-              Retry
-            </button>
-          </div>
-        )}
-      </div>
+      <CustomPlayer
+        videoUrl={videoUrl!}
+        poster={anime.bannerImage || anime.coverImage || undefined}
+        subtitles={subtitles}
+        ep={ep}
+        title={episodeTitle ?? undefined}
+      />
     );
   }
 

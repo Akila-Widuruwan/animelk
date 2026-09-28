@@ -66,7 +66,7 @@ export default async function AnimePage({
       <Header solid />
 
       <main>
-        <section className="relative h-[400px] w-full overflow-hidden pt-[72px] md:h-[500px]">
+        <section className="relative h-[420px] w-full overflow-hidden pt-[72px] md:h-[520px]">
           {anime.bannerImage || anime.coverImage ? (
             <Image
               src={anime.bannerImage || anime.coverImage}
@@ -79,12 +79,13 @@ export default async function AnimePage({
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-panel via-panel-2 to-ink" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-ink/40" />
+          <div className="absolute inset-0 bg-gradient-to-r from-ink/85 via-ink/40 to-ink/10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-ink/25" />
         </section>
 
         <div className="container-site">
-          <div className="relative z-10 -mt-44 flex flex-col items-center gap-8 md:-mt-52 md:flex-row md:items-end">
-            <div className="relative aspect-[488/680] w-[180px] shrink-0 overflow-hidden rounded-xl bg-panel shadow-[0_25px_60px_rgba(0,0,0,0.6)] ring-1 ring-white/10 md:w-[240px]">
+          <div className="relative z-10 -mt-36 grid grid-cols-1 items-start gap-8 pb-6 md:-mt-48 md:grid-cols-[200px_minmax(0,1fr)] md:gap-9 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10">
+            <div className="relative mx-auto aspect-[488/680] w-[180px] shrink-0 overflow-hidden rounded-xl bg-panel shadow-[0_25px_60px_rgba(0,0,0,0.6)] ring-1 ring-white/10 md:mx-0 md:w-full lg:w-[240px]">
               {anime.coverImage ? (
                 <Image
                   src={anime.coverImage}
@@ -112,18 +113,18 @@ export default async function AnimePage({
             </div>
 
             <div className="min-w-0 flex-1 pb-2 text-center md:text-left">
-              <h1 className="text-2xl font-extrabold leading-tight text-white md:text-4xl">
+              <h1 className="max-w-3xl text-2xl font-extrabold leading-tight text-white md:text-[34px] md:leading-[1.15]">
                 {anime.title}
               </h1>
 
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 md:justify-start">
-                <span className="flex items-center gap-1.5">
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-2 md:justify-start">
+                <span className="inline-flex h-6 items-center gap-1.5">
                   <span className="rounded bg-[#f5c518] px-1.5 py-0.5 text-[11px] font-extrabold leading-none text-black">
                     IMDb
                   </span>
                   <span className="text-sm font-bold text-white">{score(anime)}</span>
                 </span>
-                <span className="flex items-center gap-1 text-sm font-bold text-[#f5c518]">
+                <span className="inline-flex h-6 items-center gap-1 rounded border border-white/15 bg-white/5 px-2 text-sm font-bold text-[#f5c518]">
                   <IconStar className="h-3.5 w-3.5" />
                   {score(anime)}
                 </span>
@@ -131,19 +132,23 @@ export default async function AnimePage({
                   <span
                     key={b.label}
                     style={{ background: b.color }}
-                    className="rounded px-1.5 py-0.5 text-[11px] font-bold leading-none text-white"
+                    className="inline-flex h-6 items-center rounded px-2 text-[11px] font-bold leading-none text-white"
                   >
                     {b.label}
                   </span>
                 ))}
-                <span className="rounded border border-white/30 px-1.5 py-0.5 text-[11px] font-bold leading-none text-white">
+                <span className="inline-flex h-6 items-center rounded border border-white/30 px-2 text-[11px] font-bold leading-none text-white">
                   {ageRating(anime)}
                 </span>
-                <span className="text-sm font-semibold text-white/80">{year(anime)}</span>
-                <span className="text-sm font-semibold text-white/80">{metaTime(anime)}</span>
+                <span className="inline-flex h-6 items-center text-sm font-semibold text-white/80">
+                  {year(anime)}
+                </span>
+                <span className="inline-flex h-6 items-center text-sm font-semibold text-white/80">
+                  {metaTime(anime)}
+                </span>
               </div>
 
-              <div className="mt-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm font-medium text-white md:justify-start">
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm font-medium text-white md:justify-start">
                 {anime.genres.map((g, i) => (
                   <span key={g} className="flex items-center gap-2">
                     {i > 0 && <span className="text-white/40">•</span>}
@@ -154,11 +159,11 @@ export default async function AnimePage({
                 ))}
               </div>
 
-              <p className="mt-5 max-w-[760px] text-[15px] leading-7 text-body">
+              <p className="mt-5 max-w-[700px] text-[15px] leading-7 text-body">
                 {anime.description || "No description available."}
               </p>
 
-              <div className="mt-7 flex flex-wrap items-center justify-center gap-4 md:justify-start">
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-4 md:justify-start">
                 <Link
                   href={`/anime/${anime.id}/watch`}
                   className="bg-gradient-btn flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-bold text-white shadow-[0_10px_25px_rgba(123,97,255,0.35)] transition hover:opacity-90"
@@ -173,7 +178,7 @@ export default async function AnimePage({
                 {anime.trailerUrl && <TrailerButton url={anime.trailerUrl} />}
               </div>
 
-              <dl className="mt-8 grid grid-cols-2 gap-x-8 gap-y-3 md:grid-cols-3">
+              <dl className="mt-7 grid grid-cols-2 gap-x-8 gap-y-4 border-t border-white/10 pt-6 md:grid-cols-3">
                 {info.map(([label, value]) => (
                   <div key={label}>
                     <dt className="text-xs font-semibold uppercase tracking-wide text-muted">

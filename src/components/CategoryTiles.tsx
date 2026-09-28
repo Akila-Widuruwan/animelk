@@ -33,7 +33,7 @@ export default function CategoryTiles({ topics }: { topics?: HomeTopic[] }) {
         <Link
           key={t.name}
           href="/#browse"
-          className="group relative aspect-[2/1] w-[170px] shrink-0 snap-start overflow-hidden rounded-xl ring-1 ring-white/[0.06] sm:w-[190px] lg:w-[210px]"
+          className="group relative aspect-[2/1] w-[150px] shrink-0 snap-start overflow-hidden rounded-xl ring-1 ring-white/[0.06] sm:w-[190px] lg:w-[210px]"
           style={{ background: t.image ? undefined : t.color }}
         >
           {t.image && (
@@ -41,7 +41,7 @@ export default function CategoryTiles({ topics }: { topics?: HomeTopic[] }) {
               src={t.image}
               alt={t.name}
               fill
-              sizes="(max-width:640px) 170px, 210px"
+              sizes="(max-width:640px) 150px, 210px"
               className="object-cover transition duration-300 group-hover:scale-110"
             />
           )}

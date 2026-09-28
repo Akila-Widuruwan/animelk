@@ -10,6 +10,7 @@ const IMAGE_HOSTS = [
   "artworks.thetvdb.com",
   "assets.fanart.tv",
   "static.wikia.nocookie.net",
+  "cdn.anidb.net",
 ];
 
 const nextConfig: NextConfig = {

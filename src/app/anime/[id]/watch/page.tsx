@@ -164,6 +164,7 @@ export default async function WatchPage({
                 videoUrl={current?.video_url ?? null}
                 episodeTitle={current?.title ?? null}
                 hasEpisodeRow={Boolean(current)}
+                subtitles={current?.subtitles ?? []}
               />
 
               {sidebar("horizontal")}

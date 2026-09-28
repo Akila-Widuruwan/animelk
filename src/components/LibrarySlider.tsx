@@ -24,7 +24,7 @@ export default function LibrarySlider({ items }: { items?: Anime[] }) {
   if (!slide) return null;
 
   return (
-    <div className="relative h-[380px] overflow-hidden rounded-2xl ring-1 ring-white/[0.06] xl:h-[440px]">
+    <div className="relative h-[320px] overflow-hidden rounded-2xl ring-1 ring-white/[0.06] sm:h-[380px] xl:h-[440px]">
       {list.map((a, i) => (
         <div
           key={a.id}
@@ -49,7 +49,7 @@ export default function LibrarySlider({ items }: { items?: Anime[] }) {
           <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-violet-2">
             Latest Anime Library
           </p>
-          <h2 className="mt-3 text-[26px] font-extrabold leading-tight tracking-tight text-white md:text-[36px]">
+          <h2 className="mt-3 text-[22px] font-extrabold leading-tight tracking-tight text-white sm:text-[26px] md:text-[36px]">
             {slide.title}
           </h2>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-2">

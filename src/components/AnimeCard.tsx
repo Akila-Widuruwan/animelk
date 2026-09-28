@@ -18,7 +18,7 @@ export default function AnimeCard({ anime, variant = "grid", className = "" }: P
     <div
       className={`group ${
         variant === "carousel"
-          ? "w-[150px] shrink-0 snap-start sm:w-[176px] lg:w-[196px] xl:w-[216px]"
+          ? "w-[132px] shrink-0 snap-start sm:w-[176px] lg:w-[196px] xl:w-[216px]"
           : "w-full"
       } ${className}`}
     >
@@ -32,7 +32,7 @@ export default function AnimeCard({ anime, variant = "grid", className = "" }: P
             src={anime.coverImage}
             alt={anime.title}
             fill
-            sizes="(max-width:640px) 45vw, (max-width:1280px) 25vw, 216px"
+            sizes="(max-width:640px) 132px, (max-width:1280px) 25vw, 216px"
             className="object-cover transition duration-300 group-hover:brightness-110"
           />
         ) : (
@@ -55,6 +55,12 @@ export default function AnimeCard({ anime, variant = "grid", className = "" }: P
           )}
         </div>
 
+        {anime.completed && (
+          <span className="absolute bottom-2 left-2 rounded bg-emerald-500/90 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white ring-1 ring-emerald-300/40 shadow-[0_2px_8px_rgba(16,185,129,0.35)] transition-opacity duration-200 group-hover:opacity-0 sm:text-[10px]">
+            ✓ COMPLETED
+          </span>
+        )}
+
         {anime.averageScore > 0 && (
           <span className="absolute right-2 top-2 flex items-center gap-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-amber-300 backdrop-blur">
             <IconStar className="h-2.5 w-2.5" />
@@ -73,10 +79,10 @@ export default function AnimeCard({ anime, variant = "grid", className = "" }: P
       </Link>
 
       <div className="mt-2.5 px-0.5">
-        <h6 className="truncate text-[13.5px] font-bold text-white transition-colors group-hover:text-violet-2">
+        <h6 className="line-clamp-2 text-[12.5px] font-bold leading-snug text-white transition-colors group-hover:text-violet-2 sm:line-clamp-none sm:truncate sm:text-[13.5px] sm:leading-normal">
           {anime.title}
         </h6>
-        <p className="mt-0.5 truncate text-[12px] text-muted">{meta}</p>
+        <p className="mt-0.5 truncate text-[11.5px] text-muted sm:text-[12px]">{meta}</p>
       </div>
     </div>
   );

@@ -23,7 +23,7 @@ function Section({
   id?: string;
 }) {
   return (
-    <section id={id} className="container-site mb-14 scroll-mt-24 lg:mb-16">
+    <section id={id} className="container-site mb-10 scroll-mt-24 sm:mb-12 lg:mb-16">
       {children}
     </section>
   );

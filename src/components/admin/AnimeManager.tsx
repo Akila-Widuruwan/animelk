@@ -26,6 +26,7 @@ interface AnimeRow {
   is_top: boolean;
   top_position: number | null;
   trailer_url: string | null;
+  completed: boolean;
   anime_genres: { genres: { id: number; name: string } | null }[];
 }
 
@@ -54,6 +55,7 @@ interface FormState {
   is_top: boolean;
   top_position: string;
   trailer_url: string;
+  completed: boolean;
   genres: number[];
 }
 
@@ -77,6 +79,7 @@ const emptyForm = (): FormState => ({
   is_top: false,
   top_position: "",
   trailer_url: "",
+  completed: false,
   genres: [],
 });
 
@@ -168,6 +171,7 @@ export default function AnimeManager() {
       is_top: a.is_top,
       top_position: a.top_position ? String(a.top_position) : "",
       trailer_url: a.trailer_url ?? "",
+      completed: Boolean(a.completed),
       genres: (a.anime_genres ?? [])
         .map((g) => g.genres?.id)
         .filter((n): n is number => Boolean(n)),
@@ -213,6 +217,7 @@ export default function AnimeManager() {
       is_top: form.is_top,
       top_position: form.top_position ? Number(form.top_position) : null,
       trailer_url: form.trailer_url.trim() || null,
+      completed: form.completed,
     };
 
     if (editing) {
@@ -284,6 +289,16 @@ export default function AnimeManager() {
     else await load();
   };
 
+  const quickToggleCompleted = async (a: AnimeRow) => {
+    const next = !a.completed;
+    setAnime((prev) => prev.map((x) => (x.id === a.id ? { ...x, completed: next } : x)));
+    const { error } = await sb.from("anime").update({ completed: next }).eq("id", a.id);
+    if (error) {
+      setAnime((prev) => prev.map((x) => (x.id === a.id ? { ...x, completed: a.completed } : x)));
+      window.alert("Unable to update completed status. Please try again.");
+    }
+  };
+
   const filtered = anime.filter((a) =>
     a.title.toLowerCase().includes(query.toLowerCase())
   );
@@ -344,9 +359,21 @@ export default function AnimeManager() {
                   <td className="px-4 py-3 text-white/80">{a.average_score ?? "—"}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
+                      {a.completed && <StatusPill ok text="Completed" />}
                       {a.is_trending && <StatusPill ok text="Trending" />}
                       {a.is_top && <StatusPill ok text={`Top ${a.top_position ?? ""}`} />}
                       {a.is_new && <StatusPill ok text="New" />}
+                      <button
+                        onClick={() => quickToggleCompleted(a)}
+                        title={a.completed ? "Mark as not completed" : "Mark as completed"}
+                        className={`rounded px-2 py-0.5 text-[10px] font-bold transition ${
+                          a.completed
+                            ? "bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
+                            : "bg-white/5 text-muted hover:bg-white/10 hover:text-white"
+                        }`}
+                      >
+                        {a.completed ? "✓ Completed" : "○ Completed"}
+                      </button>
                     </div>
                   </td>
                   <td className="px-4 py-3">
@@ -453,6 +480,36 @@ export default function AnimeManager() {
               <input type="number" className={inputCls} value={form.top_position} onChange={(e) => set("top_position", e.target.value)} />
             </Field>
           </div>
+
+          <Field label="Completed" className="mt-4">
+            <div className="flex items-center justify-between gap-4 rounded-lg border border-white/10 bg-ink px-4 py-3">
+              <div>
+                <p className="text-[13px] font-semibold text-white">
+                  Completed {form.completed ? <span className="text-emerald-300">· ON</span> : <span className="text-muted">· OFF</span>}
+                </p>
+                <p className="mt-0.5 text-[12px] text-muted">
+                  Show the Completed badge on this anime when all available episodes have been uploaded.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={form.completed}
+                onClick={() => set("completed", !form.completed)}
+                className={`relative h-7 w-12 shrink-0 rounded-full border transition-colors duration-200 ${
+                  form.completed
+                    ? "border-emerald-400/50 bg-emerald-500"
+                    : "border-white/15 bg-white/10"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200 ${
+                    form.completed ? "left-[26px]" : "left-0.5"
+                  }`}
+                />
+              </button>
+            </div>
+          </Field>
 
           <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
             {[

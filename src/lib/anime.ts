@@ -17,6 +17,7 @@ export interface Anime {
   quality?: string;
   isDub?: boolean;
   trailerUrl?: string;
+  completed?: boolean;
 }
 
 export const db = data as Record<string, Anime[]>;

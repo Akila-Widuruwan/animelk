@@ -13,9 +13,10 @@ import TopicsManager from "@/components/admin/TopicsManager";
 import MenuManager from "@/components/admin/MenuManager";
 import SettingsManager from "@/components/admin/SettingsManager";
 import LibraryImport from "@/components/admin/LibraryImport";
+import AnimedlImport from "@/components/admin/AnimedlImport";
 import { Spinner } from "@/components/admin/ui";
 
-type Tab = "dashboard" | "anime" | "sections" | "hero" | "topics" | "menu" | "settings";
+type Tab = "dashboard" | "anime" | "sections" | "hero" | "topics" | "menu" | "settings" | "animedl";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
@@ -24,6 +25,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "hero", label: "Hero Slides" },
   { id: "topics", label: "Topics" },
   { id: "menu", label: "Menu" },
+  { id: "animedl", label: "AnimeDL" },
   { id: "settings", label: "Settings" },
 ];
 
@@ -252,6 +254,7 @@ where id = '${session.user.id}';`}
           {tab === "hero" && <HeroManager />}
           {tab === "topics" && <TopicsManager />}
           {tab === "menu" && <MenuManager />}
+          {tab === "animedl" && <AnimedlImport />}
           {tab === "settings" && <SettingsManager />}
         </main>
       </div>

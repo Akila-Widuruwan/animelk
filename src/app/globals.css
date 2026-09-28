@@ -26,6 +26,7 @@ body {
   color: var(--color-body);
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 ::selection {
@@ -77,9 +78,9 @@ body {
 }
 
 /* Responsive site container:
-   mobile 24px gutters -> desktop min(1500px, 100% - 100px) */
+   mobile 28px gutters -> desktop min(1500px, 100% - 100px) */
 @utility container-site {
-  width: calc(100% - 24px);
+  width: calc(100% - 28px);
   margin-inline: auto;
   @media (min-width: 640px) {
     width: calc(100% - 48px);
@@ -123,4 +124,16 @@ body {
 .eq-bar {
   height: 10px;
   animation: eq 1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-fade-in-up {
+    animation: none;
+  }
+  .eq-bar {
+    animation: none;
+  }
 }

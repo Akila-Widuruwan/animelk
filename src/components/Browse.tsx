@@ -21,7 +21,7 @@ function Select({
   onChange: (v: string) => void;
 }) {
   return (
-    <label className="relative flex items-center gap-2 rounded-full border border-white/10 bg-white/5 py-2 pl-4 pr-3 text-[13px] text-white transition hover:border-primary/50">
+    <label className="relative flex items-center gap-2 rounded-full border border-white/10 bg-white/5 py-2.5 pl-4 pr-3 text-[13px] text-white transition hover:border-primary/50">
       <span className="text-muted">{label}:</span>
       <select
         value={value}
@@ -51,7 +51,7 @@ function Pill({
   return (
     <button
       onClick={onClick}
-      className={`rounded-full px-4 py-2 text-[13px] font-semibold transition duration-200 ${
+      className={`shrink-0 rounded-full px-4 py-2.5 text-[13px] font-semibold transition duration-200 ${
         active
           ? "bg-gradient-btn text-white shadow-[0_6px_18px_rgba(124,92,255,0.4)]"
           : "border border-white/10 bg-white/5 text-muted hover:border-primary/50 hover:text-white"
@@ -102,7 +102,7 @@ export default function Browse({ pool }: { pool?: Anime[] }) {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap">
         {TYPES.map((t) => (
           <Pill
             key={t}
@@ -117,7 +117,7 @@ export default function Browse({ pool }: { pool?: Anime[] }) {
         ))}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      <div className="no-scrollbar -mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap">
         <Pill
           active={genre === "All"}
           onClick={() => {
@@ -167,18 +167,18 @@ export default function Browse({ pool }: { pool?: Anime[] }) {
         </p>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
+      <div className="mt-6 grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-6 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
         {shown.map((a) => (
           <AnimeCard key={a.id} anime={a} />
         ))}
       </div>
 
       {pages > 1 && (
-        <div className="mt-10 flex items-center justify-center gap-2">
+        <div className="mt-8 flex items-center justify-center gap-2 sm:mt-10">
           <button
             onClick={() => paginate(current - 1)}
             aria-label="Previous page"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white/70 transition hover:border-primary hover:text-white"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 text-white/70 transition hover:border-primary hover:text-white"
           >
             <IconChevronLeft className="h-4 w-4" />
           </button>
@@ -186,7 +186,7 @@ export default function Browse({ pool }: { pool?: Anime[] }) {
             <button
               key={p}
               onClick={() => paginate(p)}
-              className={`h-10 w-10 rounded-full text-sm font-bold transition ${
+              className={`h-11 w-11 rounded-full text-sm font-bold transition ${
                 p === current
                   ? "bg-gradient-btn text-white shadow-[0_6px_18px_rgba(124,92,255,0.4)]"
                   : "border border-white/10 text-white/70 hover:border-primary hover:text-white"
@@ -198,7 +198,7 @@ export default function Browse({ pool }: { pool?: Anime[] }) {
           <button
             onClick={() => paginate(current + 1)}
             aria-label="Next page"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white/70 transition hover:border-primary hover:text-white"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 text-white/70 transition hover:border-primary hover:text-white"
           >
             <IconChevronRight className="h-4 w-4" />
           </button>

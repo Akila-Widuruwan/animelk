@@ -37,6 +37,7 @@ interface DbAnime {
   quality: string | null;
   is_dub: boolean | null;
   trailer_url: string | null;
+  completed: boolean | null;
   anime_genres?: { genres: { name: string } | null }[];
 }
 
@@ -71,6 +72,7 @@ export function mapAnime(row: DbAnime): Anime {
     quality: row.quality ?? undefined,
     isDub: row.is_dub ?? undefined,
     trailerUrl: row.trailer_url ?? undefined,
+    completed: Boolean(row.completed),
   };
 }
 
@@ -210,6 +212,13 @@ export async function getAnime(id: number): Promise<Anime | null> {
   }
 }
 
+export interface SubtitleTrack {
+  url: string;
+  label: string;
+  lang: string;
+  default?: boolean;
+}
+
 export interface EpisodeMeta {
   episode_number: number;
   title: string | null;
@@ -217,6 +226,7 @@ export interface EpisodeMeta {
   thumbnail: string | null;
   duration: number | null;
   is_premium: boolean;
+  subtitles: SubtitleTrack[];
 }
 
 export async function getEpisodes(animeId: number): Promise<EpisodeMeta[]> {
@@ -225,11 +235,16 @@ export async function getEpisodes(animeId: number): Promise<EpisodeMeta[]> {
   try {
     const { data, error } = await sb
       .from("episodes")
-      .select("episode_number, title, video_url, thumbnail, duration, is_premium")
+      .select(
+        "episode_number, title, video_url, thumbnail, duration, is_premium, subtitles"
+      )
       .eq("anime_id", animeId)
       .order("episode_number");
     if (error) return [];
-    return (data as unknown as EpisodeMeta[]) ?? [];
+    return ((data as unknown as EpisodeMeta[]) ?? []).map((e) => ({
+      ...e,
+      subtitles: Array.isArray(e.subtitles) ? e.subtitles : [],
+    }));
   } catch {
     return [];
   }

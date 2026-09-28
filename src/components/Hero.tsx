@@ -53,7 +53,7 @@ export default function Hero({ slides }: { slides?: Anime[] }) {
   return (
     <section
       id="hero"
-      className="relative h-[85svh] min-h-[520px] w-full overflow-hidden sm:h-[100svh] sm:min-h-[560px]"
+      className="relative h-[56svh] min-h-[500px] max-h-[620px] w-full overflow-hidden sm:h-[85svh] sm:min-h-[520px] sm:max-h-none xl:h-[100svh] xl:min-h-[560px]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -72,17 +72,18 @@ export default function Hero({ slides }: { slides?: Anime[] }) {
               priority={i === 0}
               loading={i === 0 ? "eager" : "lazy"}
               sizes="100vw"
-              className="object-cover object-center"
+              className="object-cover object-[60%_center] sm:object-center"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/55 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-ink via-transparent to-ink/50" />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/30 to-ink/40" />
           </div>
         ))}
       </div>
+      <div className="pointer-events-none absolute inset-0 z-[5] bg-gradient-to-t from-ink via-ink/25 to-transparent md:hidden" />
 
-      <div className="container-site relative z-20 flex h-full items-center">
-        <div key={slide.id} className="animate-fade-in-up max-w-[640px] pb-16 lg:pb-0">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <div className="container-site relative z-20 flex h-full flex-col items-stretch justify-start pt-[76px] md:flex-row md:items-center md:justify-start md:pt-0">
+        <div key={slide.id} className="animate-fade-in-up w-full max-w-[640px] md:pb-16 lg:pb-0">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-3">
             <span className="flex items-center gap-1.5">
               <span className="rounded bg-[#f5c518] px-1.5 py-0.5 text-[11px] font-extrabold leading-none text-black">
                 IMDb
@@ -102,16 +103,21 @@ export default function Hero({ slides }: { slides?: Anime[] }) {
               {ageRating(slide)}
             </span>
             <span className="text-[13px] font-semibold text-white/70">{year(slide)}</span>
-            <span className="text-[13px] font-semibold text-white/70">{metaTime(slide)}</span>
+            <span className="hidden text-[13px] font-semibold text-white/70 sm:inline">
+              {metaTime(slide)}
+            </span>
           </div>
 
-          <Link href={`/anime/${slide.id}`}>
-            <h2 className="mt-4 text-[34px] font-extrabold leading-[1.08] tracking-tight text-white transition hover:text-violet-2 sm:text-[42px] md:text-[50px] xl:text-[58px] [@media(max-height:640px)]:text-3xl">
-              {slide.title}
-            </h2>
-          </Link>
+          <h2 className="mt-3 max-w-[95%] line-clamp-2 text-[26px] font-extrabold leading-[1.08] tracking-tight text-white min-[400px]:text-[28px] sm:mt-4 sm:max-w-none sm:line-clamp-none sm:text-[42px] md:text-[50px] xl:text-[58px] [@media(max-height:640px)]:text-3xl">
+            {slide.title}
+          </h2>
 
-          <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-white/90">
+          <div className="mt-2 flex items-center gap-1.5 text-[13px] font-bold text-[#f5c518] md:hidden">
+            <IconStar className="h-4 w-4" />
+            {score(slide)}
+          </div>
+
+          <div className="mt-3 hidden flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-white/90 sm:flex">
             {slide.genres.slice(0, 3).map((g, i) => (
               <span key={g} className="flex items-center gap-2">
                 {i > 0 && <span className="text-white/40">•</span>}
@@ -129,43 +135,69 @@ export default function Hero({ slides }: { slides?: Anime[] }) {
             </span>
           </div>
 
-          <p className="mt-5 line-clamp-3 max-w-[560px] text-[15px] leading-7 text-body [@media(max-height:640px)]:hidden">
+          <p className="mt-3 line-clamp-2 max-w-[560px] text-[13px] leading-[1.5] text-body sm:mt-5 sm:line-clamp-3 sm:text-[15px] sm:leading-7 [@media(max-height:640px)]:hidden">
             {slide.description}
           </p>
 
-          <div className="mt-7 flex flex-wrap items-center gap-3 [@media(max-height:640px)]:mt-4">
+          <div className="mt-4 flex flex-wrap items-center gap-2.5 sm:mt-7 sm:gap-3 [@media(max-height:640px)]:mt-4">
             <Link
               href={`/anime/${slide.id}/watch`}
-              className="bg-gradient-btn flex h-12 items-center gap-2 rounded-full px-8 text-[15px] font-bold text-white shadow-[0_12px_30px_rgba(124,92,255,0.45)] transition duration-200 hover:scale-[1.03] hover:brightness-110"
+              className="bg-gradient-btn flex h-12 flex-1 items-center justify-center gap-2 rounded-full px-4 text-sm font-bold text-white shadow-[0_12px_30px_rgba(124,92,255,0.45)] transition duration-200 hover:scale-[1.03] hover:brightness-110 sm:flex-none sm:px-8 sm:text-[15px]"
             >
               <IconPlay className="h-5 w-5" />
               Watch Now
             </Link>
             <Link
               href={`/anime/${slide.id}`}
-              className="flex h-12 items-center gap-2 rounded-full border border-white/20 bg-white/5 px-7 text-[15px] font-semibold text-white backdrop-blur transition duration-200 hover:scale-[1.03] hover:border-violet-2/70 hover:bg-violet-2/15"
+              className="flex h-12 items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 text-sm font-semibold text-white backdrop-blur transition duration-200 hover:scale-[1.03] hover:border-violet-2/70 hover:bg-violet-2/15 sm:px-7 sm:text-[15px]"
             >
               <IconPlus className="h-4 w-4" />
               Add to List
             </Link>
             <button
               aria-label="More info"
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white backdrop-blur transition hover:border-violet-2/70 hover:bg-violet-2/15"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white backdrop-blur transition hover:border-violet-2/70 hover:bg-violet-2/15"
             >
               <IconInfo className="h-5 w-5" />
             </button>
           </div>
         </div>
+
+        <div className="mt-auto w-full pb-6 pt-6 md:hidden">
+          <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+            {list.map((a, i) => (
+              <button
+                key={a.id}
+                onClick={() => setActive(i)}
+                aria-label={a.title}
+                className={`group relative aspect-video w-[84px] shrink-0 overflow-hidden rounded-lg border-2 transition-all duration-300 ${
+                  i === active
+                    ? "border-primary shadow-[0_0_16px_rgba(124,92,255,0.45)]"
+                    : "border-white/10 opacity-60 hover:opacity-100"
+                }`}
+              >
+                <Image
+                  src={a.bannerImage || a.coverImage}
+                  alt={a.title}
+                  fill
+                  sizes="88px"
+                  loading={i === 0 ? "eager" : "lazy"}
+                  className="object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      <div className="absolute bottom-5 left-0 right-0 z-20 lg:right-[clamp(20px,5vw,80px)] lg:left-auto lg:bottom-[72px]">
+      <div className="absolute bottom-5 left-0 right-0 z-20 hidden md:block lg:right-[clamp(20px,5vw,80px)] lg:left-auto lg:bottom-[72px]">
         <div className="no-scrollbar flex gap-3 overflow-x-auto px-6 lg:w-auto lg:justify-end lg:overflow-visible lg:px-0 lg:pr-0">
           {list.map((a, i) => (
             <button
               key={a.id}
               onClick={() => setActive(i)}
               aria-label={a.title}
-              className={`group relative aspect-video w-[120px] shrink-0 overflow-hidden rounded-lg border transition-all duration-300 sm:w-[140px] xl:w-[150px] ${
+              className={`group relative aspect-video w-[140px] shrink-0 overflow-hidden rounded-lg border transition-all duration-300 xl:w-[150px] ${
                 i === active
                   ? "scale-105 border-primary shadow-[0_0_20px_rgba(124,92,255,0.45)]"
                   : "border-white/10 opacity-60 hover:scale-[1.04] hover:opacity-100"
