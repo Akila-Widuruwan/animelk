@@ -8,6 +8,7 @@ import {
 } from "react";
 import Hls from "hls.js";
 import type { SubtitleTrack } from "@/lib/db";
+import SubtitleOverlay from "./SubtitleOverlay";
 
 const HLS_EXT = /\.(m3u8)(\?|$)/i;
 const RESUME_PREFIX = "animelk-resume";
@@ -408,13 +409,7 @@ export default function CustomPlayer({
   }, []);
 
   const applySubtitle = useCallback((index: number | null) => {
-    const v = videoRef.current;
     setActiveSub(index);
-    if (!v) return;
-    const tracks = Array.from(v.textTracks);
-    tracks.forEach((t, i) => {
-      t.mode = index === i ? "showing" : "disabled";
-    });
   }, []);
 
   const saveResume = useCallback(() => {
@@ -528,19 +523,6 @@ export default function CustomPlayer({
       saveResume();
     };
   }, [saveResume]);
-
-  /* default subtitle once tracks ready */
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    const tryApply = () => {
-      if (v.textTracks.length >= subtitles.length && subtitles.length > 0) {
-        applySubtitle(defaultSubIndex);
-      }
-    };
-    v.addEventListener("loadedmetadata", tryApply);
-    return () => v.removeEventListener("loadedmetadata", tryApply);
-  }, [subtitles.length, defaultSubIndex, applySubtitle]);
 
   /* pip + fullscreen events */
   useEffect(() => {
@@ -777,18 +759,16 @@ export default function CustomPlayer({
         }}
         onError={() => setError("Failed to load video.")}
         crossOrigin="anonymous"
-      >
-        {subtitles.map((s, i) => (
-          <track
-            key={`${s.url}-${i}`}
-            kind="subtitles"
-            src={s.url}
-            srcLang={s.lang || "en"}
-            label={s.label || `Track ${i + 1}`}
-            default={i === defaultSubIndex}
-          />
-        ))}
-      </video>
+      />
+
+      <SubtitleOverlay
+        url={
+          activeSub !== null && subtitles[activeSub]
+            ? subtitles[activeSub].url
+            : null
+        }
+        time={time}
+      />
 
       {/* ------------------------------ top bar ------------------------------ */}
       <div
