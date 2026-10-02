@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { PlayerLayout } from "@/lib/usePlayerLayout";
 
 interface SubCue {
   start: number;
@@ -122,9 +123,13 @@ function cueToJsx(text: string, keyPrefix: string): React.ReactNode {
 export default function SubtitleOverlay({
   url,
   time,
+  layout,
+  controlsVisible,
 }: {
   url: string | null;
   time: number;
+  layout: PlayerLayout | null;
+  controlsVisible: boolean;
 }) {
   const [loaded, setLoaded] = useState<{ url: string; cues: SubCue[] } | null>(
     null
@@ -145,20 +150,51 @@ export default function SubtitleOverlay({
     };
   }, [url]);
 
-  if (!url || !loaded || loaded.url !== url || loaded.cues.length === 0) {
+  if (!url || !layout || !loaded || loaded.url !== url || loaded.cues.length === 0) {
     return null;
   }
 
   const active = loaded.cues.filter((c) => time >= c.start && time <= c.end);
   if (active.length === 0) return null;
 
+  /* ---- player-relative, letterbox-aware, controls-aware positioning ---- */
+
+  const GAP_ABOVE_CONTROLS = 14;
+  const SAFE_RATIO_VISIBLE = 0.2;
+  const SAFE_RATIO_HIDDEN = 0.12;
+  const MAX_RATIO = 0.55;
+
+  const letterboxBottom =
+    layout.playerHeight - (layout.videoTop + layout.videoHeight);
+  const aboveControls = layout.controlsHeight + GAP_ABOVE_CONTROLS;
+  const targetBottom =
+    letterboxBottom +
+    layout.videoHeight * (controlsVisible ? SAFE_RATIO_VISIBLE : SAFE_RATIO_HIDDEN);
+
+  let bottom = controlsVisible
+    ? Math.max(aboveControls, targetBottom)
+    : targetBottom;
+  bottom = Math.min(bottom, letterboxBottom + layout.videoHeight * MAX_RATIO);
+
+  const fontSize = Math.round(
+    Math.min(32, Math.max(14, layout.videoHeight * 0.046))
+  );
+  const maxWidth = Math.min(
+    layout.videoWidth * 0.96,
+    layout.playerWidth * 0.92
+  );
+
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-[88px] z-10 flex flex-col items-center gap-1 px-4 text-center sm:bottom-[84px]">
+    <div
+      className="pointer-events-none absolute inset-x-0 z-10 flex flex-col items-center gap-1 px-4 text-center transition-[bottom] duration-200 ease-out"
+      style={{ bottom }}
+    >
       {active.map((c, i) => (
         <span
           key={`${c.start}-${i}`}
           dir="auto"
-          className="ak-sub block text-[clamp(13px,2.2vw,24px)] font-semibold leading-[1.45] text-white"
+          className="ak-sub block font-semibold leading-[1.4] text-white"
+          style={{ fontSize, maxWidth }}
         >
           {cueToJsx(c.text, `${c.start}-${i}`)}
         </span>

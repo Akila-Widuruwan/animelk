@@ -8,6 +8,7 @@ import {
 } from "react";
 import Hls from "hls.js";
 import type { SubtitleTrack } from "@/lib/db";
+import { usePlayerLayout } from "@/lib/usePlayerLayout";
 import SubtitleOverlay from "./SubtitleOverlay";
 
 const HLS_EXT = /\.(m3u8)(\?|$)/i;
@@ -337,6 +338,8 @@ export default function CustomPlayer({
   } | null>(null);
 
   const seekFlashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const layout = usePlayerLayout(wrapRef, barRef, videoRef);
 
   const menuOpen = menu !== "none";
   const draggingRefState = useRef(dragging);
@@ -768,6 +771,8 @@ export default function CustomPlayer({
             : null
         }
         time={time}
+        layout={layout}
+        controlsVisible={controlsVisible}
       />
 
       {/* ------------------------------ top bar ------------------------------ */}
