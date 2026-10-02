@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { Button, Field, Modal, StatusPill, Thumb, inputCls } from "./ui";
 import EpisodesManager from "./EpisodesManager";
+import TmdbPicker, { type TmdbSelectedImage } from "./TmdbPicker";
 
 interface AnimeRow {
   id: number;
@@ -101,6 +102,7 @@ export default function AnimeManager() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [episodesFor, setEpisodesFor] = useState<AnimeRow | null>(null);
+  const [tmdbFor, setTmdbFor] = useState<"cover" | "banner" | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -431,10 +433,20 @@ export default function AnimeManager() {
               />
             </Field>
             <Field label="Cover image URL">
-              <input className={inputCls} value={form.cover_image} onChange={(e) => set("cover_image", e.target.value)} placeholder="https://..." />
+              <div className="flex gap-2">
+                <input className={inputCls} value={form.cover_image} onChange={(e) => set("cover_image", e.target.value)} placeholder="https://..." />
+                <Button variant="ghost" className="shrink-0" onClick={() => setTmdbFor("cover")}>
+                  Search TMDB
+                </Button>
+              </div>
             </Field>
             <Field label="Banner image URL">
-              <input className={inputCls} value={form.banner_image} onChange={(e) => set("banner_image", e.target.value)} placeholder="https://..." />
+              <div className="flex gap-2">
+                <input className={inputCls} value={form.banner_image} onChange={(e) => set("banner_image", e.target.value)} placeholder="https://..." />
+                <Button variant="ghost" className="shrink-0" onClick={() => setTmdbFor("banner")}>
+                  Search TMDB
+                </Button>
+              </div>
             </Field>
             <Field label="Format">
               <select className={inputCls} value={form.format} onChange={(e) => set("format", e.target.value)}>
@@ -566,6 +578,18 @@ export default function AnimeManager() {
 
       {episodesFor && (
         <EpisodesManager anime={episodesFor} onClose={() => setEpisodesFor(null)} />
+      )}
+
+      {tmdbFor && (
+        <TmdbPicker
+          mode="form"
+          target={tmdbFor}
+          onSelect={(img: TmdbSelectedImage) => {
+            set(tmdbFor === "cover" ? "cover_image" : "banner_image", img.url);
+            setTmdbFor(null);
+          }}
+          onClose={() => setTmdbFor(null)}
+        />
       )}
     </div>
   );

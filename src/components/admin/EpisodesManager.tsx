@@ -400,22 +400,50 @@ export default function EpisodesManager({ anime, onClose }: Props) {
               </label>
             </Field>
             <Field label="Video URL" className="col-span-2 md:col-span-4">
-              <div className="flex gap-2">
-                <input
-                  className={inputCls}
-                  value={editing.video_url ?? ""}
-                  placeholder="https://... mp4 / m3u8 / embed URL"
-                  onChange={(e) => setEditing({ ...editing, video_url: e.target.value })}
-                />
-                <Button
-                  variant="ghost"
-                  className="shrink-0"
-                  onClick={openColabTransfer}
-                  title="Generate a Colab notebook or Python script that downloads the link and uploads it to R2 / abyss.to using Google's or GitHub's network (no device bandwidth used)"
-                >
-                  Remote via Colab
-                </Button>
+              <div className="grid gap-2">
+                {["1080p", "720p", "480p"].map((quality, i) => {
+                  const parts = (editing?.video_url ?? "")
+                    .split("|")
+                    .map((s) => s.trim());
+                  while (parts.length < 3) parts.push("");
+                  const value = parts[i] ?? "";
+                  return (
+                    <div key={quality} className="flex gap-2">
+                      <input
+                        className={inputCls}
+                        value={value}
+                        placeholder={`Server ${i + 1} — ${quality} link`}
+                        onChange={(e) => {
+                          setEditing((ed) => {
+                            if (!ed) return ed;
+                            const p = (ed.video_url ?? "")
+                              .split("|")
+                              .map((s) => s.trim());
+                            while (p.length < 3) p.push("");
+                            p[i] = e.target.value.trim();
+                            const joined = p.join("|").replace(/\|+$/, "");
+                            return { ...ed, video_url: joined };
+                          });
+                        }}
+                      />
+                      {i === 0 && (
+                        <Button
+                          variant="ghost"
+                          className="shrink-0"
+                          onClick={openColabTransfer}
+                          title="Generate a Colab notebook or Python script that downloads the link and uploads it to R2 / abyss.to using Google's or GitHub's network (no device bandwidth used)"
+                        >
+                          Remote via Colab
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
+              <p className="mt-1.5 text-[11px] font-medium text-muted">
+                Server 1 = 1080p, Server 2 = 720p, Server 3 = 480p. Leave empty
+                servers you don&apos;t have; the player shows a button per link.
+              </p>
             </Field>
           </div>
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { Button, Field, inputCls } from "./ui";
 import AbyssUploadSettings from "./AbyssUploadSettings";
+import TmdbSettings from "./TmdbSettings";
 
 interface SettingRow {
   key: string;
@@ -61,6 +62,7 @@ export default function SettingsManager() {
   return (
     <div>
       <AbyssUploadSettings />
+      <TmdbSettings />
       <p className="mb-5 text-[13px] text-muted">
         Site-wide settings stored as JSON. Keys used by the site: <code>site</code>,{" "}
         <code>footer</code>, <code>socials</code>.

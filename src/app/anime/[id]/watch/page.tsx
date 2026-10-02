@@ -12,6 +12,7 @@ import AnimeWatchInfo from "@/components/watch/AnimeWatchInfo";
 import { IconChevronLeft, IconChevronRight } from "@/components/Icons";
 import { allAnime, db } from "@/lib/anime";
 import { getAnime, getEpisodes, getRelated } from "@/lib/db";
+import { isDirectMediaUrl, serverSources } from "@/lib/stream";
 
 export function generateStaticParams() {
   return allAnime.map((a) => ({ id: String(a.id) }));
@@ -101,6 +102,13 @@ export default async function WatchPage({
   const prev = !isMovie && ep > 1 ? episodes.find((e) => e.episode_number === ep - 1) : null;
   const next = !isMovie && ep < total ? episodes.find((e) => e.episode_number === ep + 1) : null;
 
+  const externalPlayerUrl = current?.video_url
+    ? serverSources(current.video_url)
+        .filter((s) => Boolean(s))
+        .map((s) => s!.url)
+        .find((u) => isDirectMediaUrl(u)) ?? null
+    : null;
+
   const related = await getRelated(anime, 7);
   const popular = db.topToday.filter((a) => a.id !== anime.id).slice(0, 7);
 
@@ -159,12 +167,15 @@ export default async function WatchPage({
           <div className="mt-5 grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_336px]">
             <div className="min-w-0">
               <WatchPlayer
+                key={current?.video_url ?? "none"}
                 anime={anime}
                 ep={ep}
                 videoUrl={current?.video_url ?? null}
                 episodeTitle={current?.title ?? null}
                 hasEpisodeRow={Boolean(current)}
                 subtitles={current?.subtitles ?? []}
+                hasPrevEpisode={Boolean(prev)}
+                hasNextEpisode={Boolean(next)}
               />
 
               {sidebar("horizontal")}
@@ -174,6 +185,8 @@ export default async function WatchPage({
                 ep={ep}
                 episodeTitle={current?.title ?? null}
                 isMovie={isMovie}
+                videoUrl={externalPlayerUrl}
+                subtitles={current?.subtitles ?? []}
               />
 
               {!isMovie && total > 1 && (

@@ -5,7 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Anime } from "@/lib/anime";
 import { ageRating, metaTime, qualityBadges, score, year } from "@/lib/anime";
+import type { SubtitleTrack } from "@/lib/db";
 import { IconBookmark, IconCheck, IconShare, IconStar } from "../Icons";
+import ExternalPlayerButtons from "../ExternalPlayerButtons";
 
 const LS_KEY = "animelk-watchlist";
 
@@ -14,9 +16,18 @@ interface Props {
   ep: number;
   episodeTitle: string | null;
   isMovie: boolean;
+  videoUrl?: string | null;
+  subtitles?: SubtitleTrack[];
 }
 
-export default function AnimeWatchInfo({ anime, ep, episodeTitle, isMovie }: Props) {
+export default function AnimeWatchInfo({
+  anime,
+  ep,
+  episodeTitle,
+  isMovie,
+  videoUrl,
+  subtitles = [],
+}: Props) {
   const [expanded, setExpanded] = useState(false);
   const [listed, setListed] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -167,6 +178,15 @@ export default function AnimeWatchInfo({ anime, ep, episodeTitle, isMovie }: Pro
             {copied ? "Link Copied" : "Share"}
           </button>
         </div>
+
+        {videoUrl && (
+          <div className="mt-6 border-t border-white/[0.06] pt-5">
+            <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted">
+              Open in external player
+            </p>
+            <ExternalPlayerButtons videoUrl={videoUrl} subtitles={subtitles} />
+          </div>
+        )}
       </div>
     </div>
   );
