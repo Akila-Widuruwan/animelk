@@ -11,7 +11,6 @@ import Footer from "@/components/Footer";
 import HashScroll from "@/components/HashScroll";
 import Reveal from "@/components/ui/Reveal";
 import ContinueWatching from "@/components/ContinueWatching";
-import MobileBottomNav from "@/components/MobileBottomNav";
 import { db, heroSlides, librarySlides, allAnime } from "@/lib/anime";
 import { fetchHome, type HomeSection } from "@/lib/db";
 
@@ -105,12 +104,12 @@ export default async function Home() {
   const sections = home?.sections && home.sections.length > 0 ? home.sections : fallbackSections();
 
   return (
-    <div className="bg-ink pb-[calc(80px+env(safe-area-inset-bottom))] md:pb-0">
+    <div className="bg-ink">
       <HashScroll />
       <Header />
       <Hero slides={hero} />
       <main>
-        <div className="pt-6 md:pt-0">
+        <div className="pt-6 md:pt-8">
           <ContinueWatching />
         </div>
         {sections.map((s) => (
@@ -123,7 +122,6 @@ export default async function Home() {
         ))}
       </main>
       <Footer />
-      <MobileBottomNav />
     </div>
   );
 }

@@ -67,8 +67,8 @@ export default function Header({ solid = false }: { solid?: boolean }) {
             : "bg-gradient-to-b from-ink/70 via-ink/30 to-transparent backdrop-blur-[10px] md:backdrop-blur-none"
         }`}
       >
-        <div className="container-site flex min-h-14 items-center gap-3 pt-[env(safe-area-inset-top)] md:h-[72px] md:gap-4 md:pt-0">
-          <Link href="/" className="flex shrink-0 items-center gap-2.5">
+        <div className="container-site flex min-h-12 items-center gap-2.5 pt-[env(safe-area-inset-top)] md:h-16 md:gap-4 md:pt-0">
+          <Link href="/" className="flex shrink-0 items-center gap-2">
             <span className="bg-gradient-btn flex h-8 w-8 items-center justify-center rounded-[10px] shadow-[0_6px_18px_rgba(124,92,255,0.45)] md:h-9 md:w-9 md:rounded-xl">
               <IconPlay className="h-3.5 w-3.5 text-white md:h-4 md:w-4" />
             </span>
@@ -111,7 +111,7 @@ export default function Header({ solid = false }: { solid?: boolean }) {
                 setSearchOpen((v) => !v);
                 setAccountOpen(false);
               }}
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:border-primary/60 md:hidden"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:border-primary/60 md:hidden"
               aria-label="Search"
             >
               <IconSearch className="h-4 w-4" />
@@ -123,7 +123,7 @@ export default function Header({ solid = false }: { solid?: boolean }) {
                   setAccountOpen((v) => !v);
                   setSearchOpen(false);
                 }}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:border-primary/60 md:h-10 md:w-10 lg:w-auto lg:gap-1.5 lg:px-3.5"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:border-primary/60 lg:w-auto lg:gap-1.5 lg:px-3.5"
                 aria-label="Account"
               >
                 <IconUser className="h-4 w-4" />
@@ -169,7 +169,7 @@ export default function Header({ solid = false }: { solid?: boolean }) {
             </Link>
 
             <button
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white xl:hidden"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white xl:hidden"
               onClick={() => {
                 setOpen(true);
                 setSearchOpen(false);
