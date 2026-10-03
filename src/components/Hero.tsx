@@ -90,7 +90,7 @@ export default function Hero({ slides }: { slides?: Anime[] }) {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] h-24 bg-gradient-to-t from-ink to-transparent md:h-44" />
 
       <div className="container-site relative z-20 flex h-full flex-col items-stretch justify-start pt-[calc(48px+env(safe-area-inset-top))] md:flex-row md:items-center md:justify-start md:pt-0">
-        <div key={slide.id} className="animate-fade-in-up mt-auto w-full max-w-[600px] pb-12 md:mt-0 md:pb-0 md:pt-[9vh]">
+        <div key={slide.id} className="animate-fade-in-up mt-auto w-full max-w-[600px] pb-12 sm:max-w-[650px] md:mt-0 md:pb-0 md:pt-[clamp(24px,9vh,96px)] lg:max-w-[700px]">
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 sm:gap-x-3">
             <span className="flex items-center gap-1.5">
               <span className="rounded bg-[#f5c518] px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-black sm:text-[11px]">
@@ -116,7 +116,7 @@ export default function Hero({ slides }: { slides?: Anime[] }) {
             </span>
           </div>
 
-          <h2 className="mt-1.5 max-w-[92%] line-clamp-2 text-[clamp(23px,6.5vw,29px)] font-extrabold leading-[1.05] tracking-[-0.02em] text-white sm:mt-4 sm:max-w-[640px] sm:line-clamp-2 sm:tracking-tight sm:text-[clamp(38px,4vw,60px)] [@media(max-height:640px)]:text-3xl">
+          <h2 className="mt-1.5 max-w-[92%] line-clamp-2 text-[clamp(23px,6.5vw,29px)] font-extrabold leading-[1.05] tracking-[-0.02em] text-white sm:mt-[clamp(10px,1.6vh,18px)] sm:max-w-[680px] sm:line-clamp-2 sm:tracking-tight sm:text-[clamp(34px,3.4vw,60px)] [@media(max-height:640px)]:text-3xl">
             {slide.title}
           </h2>
 
@@ -136,28 +136,28 @@ export default function Hero({ slides }: { slides?: Anime[] }) {
             ))}
           </div>
 
-          <p className="hidden max-w-[560px] text-[12px] leading-[1.35] text-body sm:mt-5 sm:line-clamp-3 sm:block sm:text-[15px] sm:leading-7 [@media(max-height:640px)]:hidden">
+          <p className="hidden max-w-[560px] text-[12px] leading-[1.35] text-body sm:mt-[clamp(10px,1.6vh,20px)] sm:line-clamp-3 sm:block sm:max-w-[620px] sm:text-[clamp(14px,1vw,17px)] sm:leading-[1.65] [@media(max-height:700px)]:line-clamp-2">
             {slide.description}
           </p>
 
-          <div className="mt-2 flex w-full flex-wrap items-center gap-2 sm:mt-7 sm:gap-3 [@media(max-height:640px)]:mt-4">
+          <div className="mt-2 flex w-full flex-wrap items-center gap-2 sm:mt-[clamp(14px,2.4vh,28px)] sm:gap-3 [@media(max-height:640px)]:mt-4">
             <Link
               href={`/anime/${slide.id}/watch`}
-              className="bg-gradient-btn flex h-[42px] min-w-0 flex-[1.2] items-center justify-center gap-2 rounded-full px-4 text-sm font-bold text-white shadow-[0_8px_22px_rgba(124,92,255,0.35)] transition duration-200 hover:scale-[1.03] hover:brightness-110 sm:h-12 sm:flex-none sm:px-8 sm:text-[15px]"
+              className="bg-gradient-btn flex h-[42px] min-w-0 flex-[1.2] items-center justify-center gap-2 rounded-full px-4 text-sm font-bold text-white shadow-[0_8px_22px_rgba(124,92,255,0.35)] transition duration-200 hover:scale-[1.03] hover:brightness-110 sm:h-[clamp(44px,5.4vh,52px)] sm:flex-none sm:px-8 sm:text-[15px]"
             >
               <IconPlay className="h-4 w-4" />
               Watch Now
             </Link>
             <Link
               href={`/anime/${slide.id}`}
-              className="flex h-[42px] min-w-0 flex-1 shrink-0 items-center justify-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3.5 text-sm font-semibold text-white backdrop-blur transition duration-200 hover:scale-[1.03] hover:border-violet-2/70 hover:bg-violet-2/15 sm:h-12 sm:px-7 sm:text-[15px]"
+              className="flex h-[42px] min-w-0 flex-1 shrink-0 items-center justify-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3.5 text-sm font-semibold text-white backdrop-blur transition duration-200 hover:scale-[1.03] hover:border-violet-2/70 hover:bg-violet-2/15 sm:h-[clamp(44px,5.4vh,52px)] sm:px-7 sm:text-[15px]"
             >
               <IconPlus className="h-4 w-4" />
               Add to List
             </Link>
             <button
               aria-label="More info"
-              className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white backdrop-blur transition hover:border-violet-2/70 hover:bg-violet-2/15 sm:h-12 sm:w-12"
+              className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white backdrop-blur transition hover:border-violet-2/70 hover:bg-violet-2/15 sm:h-[clamp(44px,5.4vh,52px)] sm:w-[clamp(44px,5.4vh,52px)]"
             >
               <IconInfo className="h-5 w-5" />
             </button>
