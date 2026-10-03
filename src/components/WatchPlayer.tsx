@@ -51,8 +51,13 @@ export default function WatchPlayer({
 
   const slots = videoUrl ? serverSources(videoUrl) : [];
   const available = slots.filter((s): s is VideoSource => Boolean(s));
-  const activeIndex = Math.min(server, Math.max(available.length - 1, 0));
-  const activeSource = available[activeIndex] ?? null;
+
+  let activeSlot = server;
+  if (!slots[activeSlot]) {
+    activeSlot = slots.findIndex((s) => Boolean(s));
+    if (activeSlot === -1) activeSlot = 0;
+  }
+  const activeSource = slots[activeSlot] ?? null;
   const playableUrl = activeSource?.url ?? null;
   const rawUrl = activeSource?.raw ?? "";
   const playableSubtitles = subtitles.map((s) =>
@@ -72,7 +77,7 @@ export default function WatchPlayer({
         </span>
         {slots.map((s, i) => {
           if (!s) return null;
-          const active = i === activeIndex;
+          const active = i === activeSlot;
           return (
             <button
               key={i}
@@ -130,8 +135,8 @@ export default function WatchPlayer({
     return (
       <>
         <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black shadow-[0_30px_80px_rgba(0,0,0,0.45)] ring-1 ring-white/[0.06]">
-          <iframe
-            src={playableUrl}
+        <iframe
+          src={playableUrl ?? ""}
             title={episodeTitle ? `Episode ${ep} — ${episodeTitle}` : `${anime.title} episode ${ep}`}
             className="absolute inset-0 h-full w-full"
             allowFullScreen

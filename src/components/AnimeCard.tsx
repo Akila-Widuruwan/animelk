@@ -18,7 +18,7 @@ export default function AnimeCard({ anime, variant = "grid", className = "" }: P
     <div
       className={`group ${
         variant === "carousel"
-          ? "w-[132px] shrink-0 snap-start sm:w-[176px] lg:w-[196px] xl:w-[216px]"
+          ? "w-[max(140px,calc(50vw-30px))] shrink-0 snap-start sm:w-[176px] lg:w-[196px] xl:w-[216px]"
           : "w-full"
       } ${className}`}
     >
@@ -55,11 +55,16 @@ export default function AnimeCard({ anime, variant = "grid", className = "" }: P
           )}
         </div>
 
-        {anime.completed && (
+        {anime.completed ? (
           <span className="absolute bottom-2 left-2 rounded bg-emerald-500/90 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white ring-1 ring-emerald-300/40 shadow-[0_2px_8px_rgba(16,185,129,0.35)] transition-opacity duration-200 group-hover:opacity-0 sm:text-[10px]">
             ✓ COMPLETED
           </span>
-        )}
+        ) : anime.status === "RELEASING" ? (
+          <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded bg-red-500/90 px-1.5 py-0.5 text-[9px] font-bold leading-none text-white ring-1 ring-red-300/40 shadow-[0_2px_8px_rgba(239,68,68,0.35)] transition-opacity duration-200 group-hover:opacity-0 sm:text-[10px]">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+            AIRING
+          </span>
+        ) : null}
 
         {anime.averageScore > 0 && (
           <span className="absolute right-2 top-2 flex items-center gap-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-amber-300 backdrop-blur">

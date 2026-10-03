@@ -33,7 +33,7 @@ export default function CategoryTiles({ topics }: { topics?: HomeTopic[] }) {
         <Link
           key={t.name}
           href="/#browse"
-          className="group relative aspect-[2/1] w-[150px] shrink-0 snap-start overflow-hidden rounded-xl ring-1 ring-white/[0.06] sm:w-[190px] lg:w-[210px]"
+          className="group relative aspect-[2/1] w-[max(148px,calc(50vw-28px))] shrink-0 snap-start overflow-hidden rounded-xl ring-1 ring-white/[0.06] sm:w-[190px] lg:w-[210px]"
           style={{ background: t.image ? undefined : t.color }}
         >
           {t.image && (

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -11,6 +11,13 @@ export const metadata: Metadata = {
   title: "ANIMELK – Watch Anime Online",
   description:
     "Stream the latest anime series and movies in HD. Watch trending anime, top-rated classics and new releases online for free.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -10,6 +10,8 @@ import Browse from "@/components/Browse";
 import Footer from "@/components/Footer";
 import HashScroll from "@/components/HashScroll";
 import Reveal from "@/components/ui/Reveal";
+import ContinueWatching from "@/components/ContinueWatching";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { db, heroSlides, librarySlides, allAnime } from "@/lib/anime";
 import { fetchHome, type HomeSection } from "@/lib/db";
 
@@ -23,7 +25,7 @@ function Section({
   id?: string;
 }) {
   return (
-    <section id={id} className="container-site mb-10 scroll-mt-24 sm:mb-12 lg:mb-16">
+    <section id={id} className="container-site mb-7 scroll-mt-24 sm:mb-12 lg:mb-16">
       {children}
     </section>
   );
@@ -103,11 +105,14 @@ export default async function Home() {
   const sections = home?.sections && home.sections.length > 0 ? home.sections : fallbackSections();
 
   return (
-    <div className="bg-ink">
+    <div className="bg-ink pb-[calc(80px+env(safe-area-inset-bottom))] md:pb-0">
       <HashScroll />
       <Header />
       <Hero slides={hero} />
       <main>
+        <div className="pt-6 md:pt-0">
+          <ContinueWatching />
+        </div>
         {sections.map((s) => (
           <Section key={s.slug} id={ANCHORS[s.slug]}>
             <Reveal>
@@ -118,6 +123,7 @@ export default async function Home() {
         ))}
       </main>
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 }

@@ -43,7 +43,10 @@ export const librarySlides = [...db.trending, ...db.popular, ...db.movies]
   .slice(6, 12);
 
 export function score(a: Anime) {
-  return a.averageScore ? (a.averageScore / 10).toFixed(1) : "–";
+  const v = a.averageScore;
+  if (!v || v <= 0) return "–";
+  const normalized = v > 10 ? v / 10 : v;
+  return Math.min(Math.max(normalized, 0), 10).toFixed(1);
 }
 
 export function year(a: Anime) {

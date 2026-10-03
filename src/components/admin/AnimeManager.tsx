@@ -473,6 +473,9 @@ export default function AnimeManager() {
             </Field>
             <Field label="Average score">
               <input className={inputCls} value={form.average_score} onChange={(e) => set("average_score", e.target.value)} />
+              <p className="mt-1.5 text-[11px] font-medium text-muted">
+                Enter either 0–10 (e.g. 8.5) or 0–100 (e.g. 85). Both display correctly.
+              </p>
             </Field>
             <Field label="Age rating">
               <select className={inputCls} value={form.age_rating} onChange={(e) => set("age_rating", e.target.value)}>

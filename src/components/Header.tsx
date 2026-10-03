@@ -49,6 +49,15 @@ export default function Header({ solid = false }: { solid?: boolean }) {
     return () => document.removeEventListener("mousedown", onDown);
   }, [accountOpen]);
 
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
   return (
     <>
       <header
@@ -58,12 +67,12 @@ export default function Header({ solid = false }: { solid?: boolean }) {
             : "bg-gradient-to-b from-ink/70 via-ink/30 to-transparent backdrop-blur-[10px] md:backdrop-blur-none"
         }`}
       >
-        <div className="container-site flex h-16 items-center gap-3 md:h-[72px] md:gap-4">
+        <div className="container-site flex min-h-14 items-center gap-3 pt-[env(safe-area-inset-top)] md:h-[72px] md:gap-4 md:pt-0">
           <Link href="/" className="flex shrink-0 items-center gap-2.5">
-            <span className="bg-gradient-btn flex h-9 w-9 items-center justify-center rounded-xl shadow-[0_6px_18px_rgba(124,92,255,0.45)]">
-              <IconPlay className="h-4 w-4 text-white" />
+            <span className="bg-gradient-btn flex h-8 w-8 items-center justify-center rounded-[10px] shadow-[0_6px_18px_rgba(124,92,255,0.45)] md:h-9 md:w-9 md:rounded-xl">
+              <IconPlay className="h-3.5 w-3.5 text-white md:h-4 md:w-4" />
             </span>
-            <span className="text-[20px] font-extrabold tracking-tight text-white">
+            <span className="text-[17px] font-extrabold tracking-tight text-white md:text-[20px]">
               ANIME<span className="text-gradient">LK</span>
             </span>
           </Link>
@@ -102,7 +111,7 @@ export default function Header({ solid = false }: { solid?: boolean }) {
                 setSearchOpen((v) => !v);
                 setAccountOpen(false);
               }}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:border-primary/60 md:hidden"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:border-primary/60 md:hidden"
               aria-label="Search"
             >
               <IconSearch className="h-4 w-4" />
@@ -114,7 +123,7 @@ export default function Header({ solid = false }: { solid?: boolean }) {
                   setAccountOpen((v) => !v);
                   setSearchOpen(false);
                 }}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:border-primary/60 lg:w-auto lg:gap-1.5 lg:px-3.5"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:border-primary/60 md:h-10 md:w-10 lg:w-auto lg:gap-1.5 lg:px-3.5"
                 aria-label="Account"
               >
                 <IconUser className="h-4 w-4" />
@@ -160,7 +169,7 @@ export default function Header({ solid = false }: { solid?: boolean }) {
             </Link>
 
             <button
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white xl:hidden"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white xl:hidden"
               onClick={() => {
                 setOpen(true);
                 setSearchOpen(false);
@@ -183,17 +192,17 @@ export default function Header({ solid = false }: { solid?: boolean }) {
       {open && (
         <div className="fixed inset-0 z-50 xl:hidden">
           <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm [animation:ak-fade-in_0.2s_ease]"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute left-0 top-0 flex h-full w-[300px] flex-col gap-6 overflow-y-auto border-r border-white/[0.06] bg-panel/95 p-6 backdrop-blur-xl">
+          <div className="absolute left-0 top-0 flex h-full w-[300px] flex-col gap-6 overflow-y-auto border-r border-white/[0.06] bg-panel/95 p-6 backdrop-blur-xl [animation:ak-drawer-in_0.25s_ease]">
             <div className="flex items-center justify-between">
               <span className="text-[19px] font-extrabold text-white">
                 ANIME<span className="text-gradient">LK</span>
               </span>
               <button
                 onClick={() => setOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-white"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 text-white"
                 aria-label="Close menu"
               >
                 <IconClose className="h-4 w-4" />
@@ -208,7 +217,7 @@ export default function Header({ solid = false }: { solid?: boolean }) {
                   key={item.label}
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-white/80 transition hover:bg-white/5 hover:text-white"
+                  className="flex items-center justify-between rounded-lg px-3 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/5 hover:text-white"
                 >
                   {item.label}
                   {item.sub && <IconChevronDown className="h-4 w-4 opacity-70" />}

@@ -14,9 +14,11 @@ import MenuManager from "@/components/admin/MenuManager";
 import SettingsManager from "@/components/admin/SettingsManager";
 import LibraryImport from "@/components/admin/LibraryImport";
 import TmdbBrowser from "@/components/admin/TmdbBrowser";
+import CheckUrls from "@/components/admin/CheckUrls";
+import AiringSchedule from "@/components/admin/AiringSchedule";
 import { Spinner } from "@/components/admin/ui";
 
-type Tab = "dashboard" | "anime" | "sections" | "hero" | "topics" | "menu" | "settings" | "tmdb";
+type Tab = "dashboard" | "anime" | "sections" | "hero" | "topics" | "menu" | "tmdb" | "check" | "airing" | "settings";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
@@ -26,6 +28,8 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "topics", label: "Topics" },
   { id: "menu", label: "Menu" },
   { id: "tmdb", label: "TMDB Images" },
+  { id: "check", label: "Check URLs" },
+  { id: "airing", label: "Release Dates" },
   { id: "settings", label: "Settings" },
 ];
 
@@ -255,6 +259,8 @@ where id = '${session.user.id}';`}
           {tab === "topics" && <TopicsManager />}
           {tab === "menu" && <MenuManager />}
           {tab === "tmdb" && <TmdbBrowser />}
+          {tab === "check" && <CheckUrls />}
+          {tab === "airing" && <AiringSchedule />}
           {tab === "settings" && <SettingsManager />}
         </main>
       </div>

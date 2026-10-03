@@ -102,7 +102,7 @@ export default function Browse({ pool }: { pool?: Anime[] }) {
 
   return (
     <div>
-      <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap">
+      <div className="no-scrollbar -mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1 [-webkit-overflow-scrolling:touch] sm:flex-wrap sm:snap-none">
         {TYPES.map((t) => (
           <Pill
             key={t}
@@ -117,7 +117,7 @@ export default function Browse({ pool }: { pool?: Anime[] }) {
         ))}
       </div>
 
-      <div className="no-scrollbar -mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap">
+      <div className="no-scrollbar -mx-1 mt-3 flex snap-x gap-2 overflow-x-auto px-1 pb-1 [-webkit-overflow-scrolling:touch] sm:flex-wrap sm:snap-none">
         <Pill
           active={genre === "All"}
           onClick={() => {

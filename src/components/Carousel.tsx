@@ -26,7 +26,7 @@ export default function Carousel({
     <div className="group/car relative">
       <div
         ref={ref}
-        className={`no-scrollbar flex snap-x snap-proximity gap-4 overflow-x-auto scroll-smooth pb-2 md:gap-5 ${className}`}
+        className={`no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-2 [-webkit-overflow-scrolling:touch] md:snap-proximity md:gap-5 ${className}`}
       >
         {children}
       </div>

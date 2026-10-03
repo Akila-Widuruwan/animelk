@@ -13,9 +13,9 @@ export default function TopTen({ items }: { items: Anime[] }) {
       {items.map((a, i) => (
         <div
           key={a.id}
-          className="flex w-[172px] shrink-0 snap-start items-end sm:w-[200px] md:w-[240px]"
+          className="flex w-[max(130px,calc(50vw-38px))] shrink-0 snap-start items-end sm:w-[200px] md:w-[240px]"
         >
-          <span className="rank-stroke -mr-3 shrink-0 pb-2 text-[64px] font-black leading-none sm:text-[84px] md:text-[110px]">
+          <span className="rank-stroke -mr-2 shrink-0 pb-2 text-[42px] font-black leading-none sm:-mr-3 sm:text-[84px] md:text-[110px]">
             {i + 1}
           </span>
           <Link
@@ -27,7 +27,7 @@ export default function TopTen({ items }: { items: Anime[] }) {
                 src={a.coverImage}
                 alt={a.title}
                 fill
-                sizes="(max-width:640px) 172px, (max-width:768px) 200px, 240px"
+                sizes="(max-width:640px) 140px, (max-width:768px) 200px, 240px"
                 className="object-cover transition duration-300 group-hover:brightness-110"
               />
             ) : (
