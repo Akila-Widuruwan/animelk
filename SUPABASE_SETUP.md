@@ -27,6 +27,20 @@ For the staff submission workflow, run
 — it adds the `staff` role, the `anime` moderation columns, and the RLS rules
 that keep unapproved uploads hidden from the public site.
 
+For direct `.vtt` subtitle uploads on **non-abyss** episodes, run
+[`supabase/migrations/0006_subtitles.sql`](./supabase/migrations/0006_subtitles.sql)
+— it creates the public `subtitles` storage bucket and lets admins and staff
+upload to it.
+
+Abyss episodes are different: their subtitles belong to the abyss video and
+show in the abyss player's CC menu, so they are **not** uploaded to Supabase
+Storage. Instead they go through the secure `abyss-sub` Edge Function, which
+holds the abyss.to credentials. See
+[`supabase/functions/abyss-sub/README.md`](./supabase/functions/abyss-sub/README.md)
+for the required secrets (`ABYSS_EMAIL`, `ABYSS_PASSWORD`, `ADMIN_EMAILS`) and
+the `supabase functions deploy abyss-sub` command. Both the **Deploy Episode**
+flow and the **Admin → Subtitles → Update Subtitle** flow use it.
+
 ## 3. Seed with your current anime data
 
 The site already ships with 97 anime from AniList. To import them into the

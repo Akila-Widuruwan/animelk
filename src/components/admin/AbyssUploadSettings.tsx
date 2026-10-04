@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
-import { Button, Field, inputCls } from "./ui";
+import { Field, Button, inputCls } from "./ui";
 
 interface AbyssUploadConfig {
   api_key?: string;
@@ -45,10 +45,9 @@ export default function AbyssUploadSettings() {
       api_endpoint: endpoint.trim() || "https://up.hydrax.net",
       session_cookie: sessionCookie.trim(),
     };
-    const { error: upErr } = await sb.from("settings").upsert(
-      { key: "abyss_upload", value: payload },
-      { onConflict: "key" }
-    );
+    const { error: upErr } = await sb
+      .from("settings")
+      .upsert({ key: "abyss_upload", value: payload }, { onConflict: "key" });
     setBusy(false);
     if (upErr) setError(upErr.message);
     else setSaved(true);
@@ -65,8 +64,8 @@ export default function AbyssUploadSettings() {
         </Button>
       </div>
       <p className="mb-4 text-[12px] text-muted">
-        API key for direct file uploads, and an optional dashboard session cookie that enables
-        the <b className="text-white">instant remote upload</b> (abyss fetches the seedr link
+        API key for direct <b className="text-white">video</b> uploads, and an optional dashboard
+        session cookie that enables the instant remote upload (abyss fetches the seedr link
         server-to-server — MKV works, no local download).
       </p>
       <div className="grid gap-4 md:grid-cols-2">
@@ -103,10 +102,28 @@ export default function AbyssUploadSettings() {
         value (paste the whole value here). Without it, the admin falls back to downloading on the
         server and uploading the file with your API key.
       </p>
-      {error && <p className="mt-3 rounded-lg bg-red-500/10 px-3 py-2 text-[13px] text-red-300">{error}</p>}
-      {saved && <p className="mt-3 rounded-lg bg-emerald-500/10 px-3 py-2 text-[13px] text-emerald-300">Saved.</p>}
+
+      <div className="mt-5 rounded-lg border border-amber-400/30 bg-amber-400/5 p-4">
+        <h4 className="mb-1 text-sm font-bold text-white">Subtitle uploads (secure)</h4>
+        <p className="text-[12px] leading-5 text-muted">
+          Attaching subtitles to an abyss video no longer uses this settings row. It runs inside the{" "}
+          <b className="text-white">abyss-sub</b> Supabase Edge Function, where the abyss email and
+          password live as secrets — so they are never exposed to the browser or the public{" "}
+          <code>settings</code> table. Set them once with:
+        </p>
+        <pre className="mt-2 overflow-x-auto rounded-lg bg-ink p-3 text-left text-[11px] text-white/80">
+{`supabase secrets set ABYSS_EMAIL=you@example.com \\
+  ABYSS_PASSWORD=your-password \\
+  ADMIN_EMAILS=you@example.com`}
+        </pre>
+      </div>
+
+      {error && (
+        <p className="mt-3 rounded-lg bg-red-500/10 px-3 py-2 text-[13px] text-red-300">{error}</p>
+      )}
+      {saved && (
+        <p className="mt-3 rounded-lg bg-emerald-500/10 px-3 py-2 text-[13px] text-emerald-300">Saved.</p>
+      )}
     </div>
   );
 }
-
-

@@ -217,6 +217,10 @@ export interface SubtitleTrack {
   label: string;
   lang: string;
   default?: boolean;
+  /** Original uploaded file name (used when pushing the track to abyss.to). */
+  filename?: string;
+  /** abyss video id this track has already been uploaded to. */
+  abyssSlug?: string;
 }
 
 export interface EpisodeMeta {

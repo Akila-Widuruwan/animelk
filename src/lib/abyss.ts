@@ -1,4 +1,8 @@
 import { createHash } from "node:crypto";
+import { srtToVtt } from "./subtitle";
+import { extractAbyssSlug } from "./abyss-slug";
+
+export { extractAbyssSlug };
 
 const PLAYER_HOST = "player.abyssplayer.com";
 
@@ -27,24 +31,6 @@ export interface AbyssResolution {
   subtitles: AbyssSubtitleInfo[];
   sources: AbyssSource[];
   domains: string[];
-}
-
-export function extractAbyssSlug(input: string): string | null {
-  const raw = (input || "").trim();
-  if (!raw) return null;
-  if (!/^https?:\/\//i.test(raw)) return raw;
-  try {
-    const u = new URL(raw);
-    const m = u.pathname.match(/\/(?:v|embed|e)?\/?([A-Za-z0-9_-]{7,17})\/?$/);
-    if (m) return m[1];
-    if (u.hostname === PLAYER_HOST) {
-      const seg = u.pathname.split("/").filter(Boolean)[0];
-      if (seg) return seg;
-    }
-  } catch {
-    return null;
-  }
-  return null;
 }
 
 async function aesCtrDecrypt(
@@ -162,17 +148,4 @@ export async function fetchAbyssSubtitleVtt(
   return srtToVtt(srt);
 }
 
-function srtToVtt(srt: string): string {
-  const lines = srt.replace(/\r\n/g, "\n").split("\n");
-  const out: string[] = ["WEBVTT", ""];
-  for (const line of lines) {
-    if (/^\d{2}:\d{2}:\d{2},\d{3}\s*-->\s*\d{2}:\d{2}:\d{2},\d{3}/.test(line)) {
-      out.push(line.replace(/,/g, "."));
-    } else if (/^\d+$/.test(line.trim())) {
-      continue;
-    } else {
-      out.push(line);
-    }
-  }
-  return out.join("\n");
-}
+

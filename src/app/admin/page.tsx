@@ -17,9 +17,10 @@ import LibraryImport from "@/components/admin/LibraryImport";
 import TmdbBrowser from "@/components/admin/TmdbBrowser";
 import CheckUrls from "@/components/admin/CheckUrls";
 import AiringSchedule from "@/components/admin/AiringSchedule";
+import SubtitleUpdater from "@/components/admin/SubtitleUpdater";
 import { Spinner } from "@/components/admin/ui";
 
-type Tab = "dashboard" | "submissions" | "anime" | "sections" | "hero" | "topics" | "menu" | "tmdb" | "check" | "airing" | "settings";
+type Tab = "dashboard" | "submissions" | "anime" | "sections" | "hero" | "topics" | "menu" | "tmdb" | "check" | "airing" | "subtitles" | "settings";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
@@ -32,6 +33,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "tmdb", label: "TMDB Images" },
   { id: "check", label: "Check URLs" },
   { id: "airing", label: "Release Dates" },
+  { id: "subtitles", label: "Subtitles" },
   { id: "settings", label: "Settings" },
 ];
 
@@ -264,6 +266,7 @@ where id = '${session.user.id}';`}
           {tab === "tmdb" && <TmdbBrowser />}
           {tab === "check" && <CheckUrls />}
           {tab === "airing" && <AiringSchedule />}
+          {tab === "subtitles" && <SubtitleUpdater />}
           {tab === "settings" && <SettingsManager />}
         </main>
       </div>

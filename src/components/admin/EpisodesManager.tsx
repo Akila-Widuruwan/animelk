@@ -4,7 +4,19 @@ import { useCallback, useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { downloadNotebook } from "@/lib/hardsub-notebook";
 import { buildTransferNotebook, buildTransferScript } from "@/lib/r2-notebook";
+import { extractAbyssSlug, isAbyssUrl } from "@/lib/abyss-slug";
+import { normalizeSubtitle, guessLangCode, safeSubtitleName } from "@/lib/subtitle";
+import { pushSubtitleToAbyss, type AbyssSubtitleLanguage } from "@/lib/abyss-sub";
 import { Button, Field, Modal, StatusPill, inputCls } from "./ui";
+
+interface SubtitleRow {
+  url?: string;
+  label?: string;
+  lang?: string;
+  default?: boolean;
+  filename?: string;
+  abyssSlug?: string;
+}
 
 interface EpisodeRow {
   id: number;
@@ -14,7 +26,7 @@ interface EpisodeRow {
   thumbnail: string | null;
   duration: number | null;
   is_premium: boolean;
-  subtitles?: { url?: string; label?: string; lang?: string; default?: boolean }[];
+  subtitles?: SubtitleRow[];
 }
 
 interface Props {
@@ -27,6 +39,14 @@ export default function EpisodesManager({ anime, onClose }: Props) {
   const [rows, setRows] = useState<EpisodeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Partial<EpisodeRow> | null>(null);
+  const [subLang, setSubLang] = useState("English");
+  const [subBusy, setSubBusy] = useState(false);
+  const [subMsg, setSubMsg] = useState("");
+  const [subFiles, setSubFiles] = useState<Record<AbyssSubtitleLanguage, File | null>>({
+    Sinhala: null,
+    English: null,
+  });
+  const [subSteps, setSubSteps] = useState<{ label: string; ok: boolean }[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [colabOpen, setColabOpen] = useState(false);
@@ -231,7 +251,13 @@ export default function EpisodesManager({ anime, onClose }: Props) {
     };
   }, [sb, anime.id]);
 
-  const openAdd = () =>
+  const resetSubUpload = () => {
+    setSubFiles({ Sinhala: null, English: null });
+    setSubSteps(null);
+  };
+
+  const openAdd = () => {
+    resetSubUpload();
     setEditing({
       episode_number: rows.length ? Math.max(...rows.map((r) => r.episode_number)) + 1 : 1,
       title: "",
@@ -241,20 +267,65 @@ export default function EpisodesManager({ anime, onClose }: Props) {
       is_premium: false,
       subtitles: [],
     });
+  };
+
+  const uploadSubtitleFile = async (file: File) => {
+    if (!editing) return;
+    setSubBusy(true);
+    setSubMsg("");
+    setError("");
+    try {
+      const vtt = normalizeSubtitle(await file.text());
+      const name = safeSubtitleName(file.name);
+      const epNo = Number(editing.episode_number) || rows.length + 1;
+      const path = `${anime.id}/ep${epNo}/${Date.now()}-${name}`;
+      const { error: upErr } = await sb.storage
+        .from("subtitles")
+        .upload(path, new Blob([vtt], { type: "text/vtt" }), {
+          contentType: "text/vtt",
+          upsert: false,
+        });
+      if (upErr) throw new Error(upErr.message);
+      const { data: pub } = sb.storage.from("subtitles").getPublicUrl(path);
+      const tracks = editing.subtitles ?? [];
+      const track: SubtitleRow = {
+        url: pub.publicUrl,
+        label: subLang.trim() || name,
+        lang: guessLangCode(subLang),
+        default: tracks.length === 0,
+        filename: name,
+      };
+      setEditing({ ...editing, subtitles: [...tracks, track] });
+      setSubMsg(`Added “${name}”${track.default ? " as the default track" : ""}. Save the episode to publish it.`);
+    } catch (e) {
+      setSubMsg(
+        `Upload failed: ${e instanceof Error ? e.message : "unknown error"}. ` +
+          "Check that the 'subtitles' storage bucket exists (run supabase/migrations/0006_subtitles.sql)."
+      );
+    } finally {
+      setSubBusy(false);
+    }
+  };
 
   const save = async () => {
     if (!editing) return;
     setBusy(true);
     setError("");
-    const subs = (editing.subtitles ?? [])
+    setSubMsg("");
+    setSubSteps(null);
+    const subs: SubtitleRow[] = (editing.subtitles ?? [])
       .map((s) => ({
         url: s.url?.trim() || "",
         label: s.label?.trim() || "",
         lang: s.lang?.trim() || "en",
         default: Boolean(s.default),
+        ...(s.filename ? { filename: s.filename } : {}),
+        ...(s.abyssSlug ? { abyssSlug: s.abyssSlug } : {}),
       }))
       .filter((s) => s.url);
     if (!subs.some((s) => s.default) && subs.length > 0) subs[0].default = true;
+
+    const abyssId = extractAbyssSlug(editing.video_url ?? "");
     const payload = {
       episode_number: Number(editing.episode_number),
       title: editing.title?.trim() || null,
@@ -264,17 +335,48 @@ export default function EpisodesManager({ anime, onClose }: Props) {
       is_premium: Boolean(editing.is_premium),
       subtitles: subs,
     };
+    // 1) Save the episode first — a subtitle failure must never invalidate it.
     const res = editing.id
       ? await sb.from("episodes").update(payload).eq("id", editing.id)
       : await sb.from("episodes").insert({ ...payload, anime_id: anime.id });
-    setBusy(false);
     if (res.error) {
+      setBusy(false);
       setError(res.error.message);
       return;
     }
+
+    // 2) Attach subtitles to Abyss — only for abyss iframe episodes with a picked file.
+    const steps: { label: string; ok: boolean }[] = [{ label: "Episode saved", ok: true }];
+    if (abyssId) {
+      steps.push({ label: `Abyss video detected (${abyssId})`, ok: true });
+      for (const lang of ["Sinhala", "English"] as const) {
+        const file = subFiles[lang];
+        if (!file) continue;
+        const out = await pushSubtitleToAbyss({ fileId: abyssId, language: lang, file });
+        steps.push({
+          label: out.ok
+            ? `${lang} subtitle uploaded`
+            : `${lang} subtitle upload failed${out.error ? ` — ${out.error}` : ""}`,
+          ok: out.ok,
+        });
+      }
+    }
+
+    setBusy(false);
+    setSubFiles({ Sinhala: null, English: null });
     setEditing(null);
+    if (steps.length > 1) setSubSteps(steps);
     await load();
   };
+
+  const abyssId = editing ? extractAbyssSlug(editing.video_url ?? "") : null;
+  // Episode has at least one non-abyss (direct / HLS / archive) server, so the
+  // on-site player needs its own WebVTT tracks on top of any abyss subtitles.
+  const hasDirectServer = (editing?.video_url ?? "")
+    .split(/[|\n]/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .some((p) => !isAbyssUrl(p));
 
   const remove = async (r: EpisodeRow) => {
     if (!window.confirm(`Delete episode ${r.episode_number}?`)) return;
@@ -291,6 +393,25 @@ export default function EpisodesManager({ anime, onClose }: Props) {
         </p>
         <Button onClick={openAdd}>+ Add Episode</Button>
       </div>
+
+      {subSteps && (
+        <div className="mb-4 rounded-xl border border-white/10 bg-ink p-3">
+          <ul className="space-y-1 text-[13px]">
+            {subSteps.map((s, i) => (
+              <li key={i} className={s.ok ? "text-emerald-300" : "text-red-300"}>
+                {s.ok ? "\u2713" : "\u2717"} {s.label}
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={() => setSubSteps(null)}
+            className="mt-2 text-[11px] font-bold text-muted transition hover:text-white"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <p className="py-8 text-center text-sm text-muted">Loading...</p>
@@ -329,7 +450,14 @@ export default function EpisodesManager({ anime, onClose }: Props) {
                   </td>
                   <td className="px-4 py-2.5">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" className="px-2.5 py-1" onClick={() => setEditing(r)}>
+                      <Button
+                        variant="ghost"
+                        className="px-2.5 py-1"
+                        onClick={() => {
+                          resetSubUpload();
+                          setEditing(r);
+                        }}
+                      >
                         Edit
                       </Button>
                       <Button variant="danger" className="px-2.5 py-1" onClick={() => remove(r)}>
@@ -447,6 +575,66 @@ export default function EpisodesManager({ anime, onClose }: Props) {
             </Field>
           </div>
 
+          {abyssId && (
+            <div className="mt-4 rounded-xl border border-primary/30 bg-primary/[0.06] p-4">
+              <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+                <h4 className="text-[13px] font-bold text-white">Abyss subtitles</h4>
+                <span className="rounded bg-emerald-500/15 px-2 py-0.5 text-[11px] font-bold text-emerald-300">
+                  Video ID: {abyssId}
+                </span>
+              </div>
+              <p className="mb-3 text-[12px] leading-5 text-muted">
+                This episode is an abyss video, so subtitles are attached to abyss itself and
+                appear in the player&apos;s CC menu — they are not stored on this site. Uploads go
+                through the secure <b className="text-white">abyss-sub</b> Edge Function, so no
+                abyss password ever reaches this browser.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {(["Sinhala", "English"] as const).map((lang) => (
+                  <div key={lang} className="rounded-lg border border-white/10 bg-ink p-3">
+                    <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted">
+                      {lang} subtitle
+                    </p>
+                    <label
+                      className={`inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-bold text-white transition ${
+                        subBusy ? "cursor-wait bg-white/10" : "border border-white/10 bg-panel hover:border-primary/60"
+                      }`}
+                    >
+                      {subFiles[lang] ? subFiles[lang]!.name : `Choose ${lang} .vtt / .srt`}
+                      <input
+                        type="file"
+                        accept=".vtt,.srt,text/vtt,application/x-subrip"
+                        className="hidden"
+                        disabled={subBusy}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0] ?? null;
+                          e.target.value = "";
+                          setSubFiles((s) => ({ ...s, [lang]: f }));
+                        }}
+                      />
+                    </label>
+                    {subFiles[lang] && (
+                      <button
+                        type="button"
+                        onClick={() => setSubFiles((s) => ({ ...s, [lang]: null }))}
+                        className="mt-2 text-[11px] font-bold text-muted transition hover:text-white"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-[11px] leading-5 text-muted">
+                Files are renamed to <b className="text-white">sinhala.srt</b> /{" "}
+                <b className="text-white">english.srt</b> automatically and pushed to abyss after
+                the episode is saved. To replace a subtitle later, use the{" "}
+                <b className="text-white">Subtitles</b> tab.
+              </p>
+            </div>
+          )}
+
+          {hasDirectServer && (
           <div className="mt-4">
             <div className="mb-2 flex items-center justify-between">
               <p className="text-[13px] font-bold text-white">
@@ -474,9 +662,47 @@ export default function EpisodesManager({ anime, onClose }: Props) {
               </Button>
             </div>
             <p className="mb-3 text-[12px] text-muted">
-              WebVTT (.vtt) tracks shown in the player — viewers can switch them with the CC
-              button. Mark one track as default to show it automatically.
+              WebVTT (.vtt) tracks shown by the <b className="text-white">on-site player</b> — i.e.
+              for direct / HLS / archive servers. Viewers switch them with the CC button; mark one
+              track as default to show it automatically. These do not affect the abyss player (use
+              the abyss panel above for that).
             </p>
+
+            <div className="mb-3 flex flex-wrap items-end gap-3 rounded-lg border border-primary/25 bg-primary/[0.06] p-3">
+              <Field label="Subtitle language" className="w-40">
+                <input
+                  className={inputCls}
+                  value={subLang}
+                  onChange={(e) => setSubLang(e.target.value)}
+                  placeholder="English"
+                />
+              </Field>
+              <label
+                className={`inline-flex h-[38px] cursor-pointer items-center justify-center gap-1.5 rounded-lg px-4 text-[13px] font-bold text-white transition ${
+                  subBusy ? "cursor-wait bg-white/10" : "bg-gradient-btn hover:opacity-90"
+                }`}
+              >
+                {subBusy ? "Uploading…" : "Upload .vtt / .srt"}
+                <input
+                  type="file"
+                  accept=".vtt,.srt,text/vtt,application/x-subrip"
+                  className="hidden"
+                  disabled={subBusy}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = "";
+                    if (f) void uploadSubtitleFile(f);
+                  }}
+                />
+              </label>
+              <p className="max-w-[360px] text-[12px] leading-5 text-muted">
+                Pick a subtitle file from your device — it is saved to this site and served to the
+                on-site player.
+              </p>
+            </div>
+            {subMsg && (
+              <p className="mb-3 rounded-lg bg-white/5 px-3 py-2 text-[12px] text-white/80">{subMsg}</p>
+            )}
             {(editing.subtitles ?? []).length === 0 && (
               <p className="rounded-lg border border-dashed border-white/10 px-3 py-4 text-center text-[13px] text-muted">
                 No subtitle tracks — the CC button won&apos;t appear in the player.
@@ -548,6 +774,7 @@ export default function EpisodesManager({ anime, onClose }: Props) {
               </div>
             ))}
           </div>
+          )}
 
           {error && (
             <p className="mt-3 rounded-lg bg-red-500/10 px-3 py-2 text-[13px] text-red-300">{error}</p>
