@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { isAdminRequest } from "@/lib/admin-auth";
+import { isStaffRequest } from "@/lib/admin-auth";
 import { checkUrl } from "@/lib/checkUrls";
 
 export const dynamic = "force-dynamic";
@@ -18,8 +18,8 @@ interface AnimeRow {
 }
 
 export async function GET(request: Request) {
-  if (!(await isAdminRequest(request))) {
-    return Response.json({ ok: false, error: "Admin login required" }, { status: 401 });
+  if (!(await isStaffRequest(request))) {
+    return Response.json({ ok: false, error: "Staff login required" }, { status: 401 });
   }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -28,7 +28,14 @@ export async function GET(request: Request) {
     return Response.json({ ok: false, error: "Supabase not configured" }, { status: 500 });
   }
 
-  const sb = createClient(url, anon);
+  // Use the caller's token so RLS scopes the scan: admins see the whole
+  // catalogue, staff only see episodes on their own pending submissions.
+  const token = request.headers
+    .get("authorization")
+    ?.replace(/^Bearer\s+/i, "");
+  const sb = createClient(url, anon, {
+    global: { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+  });
   const { data: episodes } = await sb
     .from("episodes")
     .select("anime_id, episode_number, video_url")

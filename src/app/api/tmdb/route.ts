@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { isAdminRequest } from "@/lib/admin-auth";
+import { isStaffRequest } from "@/lib/admin-auth";
 import {
   getTmdbEnvCredentials,
   hasCredential,
@@ -52,8 +52,8 @@ function errorResponse(kind: string, status: number) {
 }
 
 export async function GET(request: Request) {
-  if (!(await isAdminRequest(request))) {
-    return Response.json({ ok: false, error: "Admin login required" }, { status: 401 });
+  if (!(await isStaffRequest(request))) {
+    return Response.json({ ok: false, error: "Staff login required" }, { status: 401 });
   }
 
   const creds = await resolveCredentials();

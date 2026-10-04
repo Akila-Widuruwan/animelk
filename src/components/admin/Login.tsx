@@ -4,7 +4,17 @@ import { useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { Button, Field, inputCls } from "./ui";
 
-export default function Login({ onLoggedIn }: { onLoggedIn: () => void }) {
+export default function Login({
+  onLoggedIn,
+  heading = "Admin",
+  subtitle = "Sign in with an admin account",
+  footer,
+}: {
+  onLoggedIn: () => void;
+  heading?: string;
+  subtitle?: string;
+  footer?: string;
+}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -30,9 +40,9 @@ export default function Login({ onLoggedIn }: { onLoggedIn: () => void }) {
         className="w-full max-w-sm rounded-2xl border border-white/10 bg-panel p-8 shadow-2xl"
       >
         <h1 className="text-xl font-extrabold text-white">
-          ANIME<span className="text-gradient">LK</span> Admin
+          ANIME<span className="text-gradient">LK</span> {heading}
         </h1>
-        <p className="mt-1 text-[13px] text-muted">Sign in with an admin account</p>
+        <p className="mt-1 text-[13px] text-muted">{subtitle}</p>
 
         <div className="mt-6 space-y-4">
           <Field label="Email">
@@ -68,8 +78,8 @@ export default function Login({ onLoggedIn }: { onLoggedIn: () => void }) {
         </Button>
 
         <p className="mt-4 text-center text-[12px] text-muted">
-          First time? Create a user in Supabase Auth, then run the SQL from
-          SUPABASE_SETUP.md to grant the admin role.
+          {footer ??
+            "First time? Create a user in Supabase Auth, then run the SQL from SUPABASE_SETUP.md to grant the admin role."}
         </p>
       </form>
     </div>

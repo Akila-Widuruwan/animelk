@@ -22,6 +22,11 @@ For custom subtitles (episode subtitle uploads), also run
 — it adds the `episodes.subtitles` column and creates the public `subtitles`
 storage bucket with admin-only upload policies.
 
+For the staff submission workflow, run
+[`supabase/migrations/0005_staff.sql`](./supabase/migrations/0005_staff.sql)
+— it adds the `staff` role, the `anime` moderation columns, and the RLS rules
+that keep unapproved uploads hidden from the public site.
+
 ## 3. Seed with your current anime data
 
 The site already ships with 97 anime from AniList. To import them into the
@@ -56,6 +61,22 @@ update public.profiles set role = 'admin' where id = '<your-user-uuid>';
 ```
 
 Admins get write access to all content tables (enforced by RLS).
+
+## 5b. Add staff (uploaders)
+
+Staff can submit new anime with episodes, TMDB posters/backdrops, and
+release dates, but they can never edit or delete anything already live on the
+site. Create their account in Supabase Auth, then:
+
+```sql
+update public.profiles set role = 'staff' where id = '<their-user-uuid>';
+```
+
+Staff sign in at **`/staff`** and submit uploads. Every submission is stored
+with `moderation_status = 'pending'` and is invisible on the public site until
+the owner approves it under **/admin → Submissions**. Approving publishes it and
+drops it into the `new-series`/`new-anime` homepage rows; rejecting attaches a
+note the staff member sees on their submission.
 
 ## What the database manages
 

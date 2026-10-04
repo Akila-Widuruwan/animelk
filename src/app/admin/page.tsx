@@ -7,6 +7,7 @@ import { supabaseBrowser } from "@/lib/supabase-browser";
 import { isSupabaseConfigured } from "@/lib/db";
 import Login from "@/components/admin/Login";
 import AnimeManager from "@/components/admin/AnimeManager";
+import Submissions from "@/components/admin/Submissions";
 import SectionsManager from "@/components/admin/SectionsManager";
 import HeroManager from "@/components/admin/HeroManager";
 import TopicsManager from "@/components/admin/TopicsManager";
@@ -18,10 +19,11 @@ import CheckUrls from "@/components/admin/CheckUrls";
 import AiringSchedule from "@/components/admin/AiringSchedule";
 import { Spinner } from "@/components/admin/ui";
 
-type Tab = "dashboard" | "anime" | "sections" | "hero" | "topics" | "menu" | "tmdb" | "check" | "airing" | "settings";
+type Tab = "dashboard" | "submissions" | "anime" | "sections" | "hero" | "topics" | "menu" | "tmdb" | "check" | "airing" | "settings";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
+  { id: "submissions", label: "Submissions" },
   { id: "anime", label: "Anime" },
   { id: "sections", label: "Sections" },
   { id: "hero", label: "Hero Slides" },
@@ -253,6 +255,7 @@ where id = '${session.user.id}';`}
 
         <main className="min-w-0 flex-1 pb-16">
           {tab === "dashboard" && <Dashboard />}
+          {tab === "submissions" && <Submissions />}
           {tab === "anime" && <AnimeManager />}
           {tab === "sections" && <SectionsManager />}
           {tab === "hero" && <HeroManager />}

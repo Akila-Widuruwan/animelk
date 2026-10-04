@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { isAdminRequest } from "@/lib/admin-auth";
+import { isStaffRequest } from "@/lib/admin-auth";
 import { fetchAnilist, searchAnilist, type AnilistMedia } from "@/lib/anilist";
 
 export const dynamic = "force-dynamic";
@@ -24,8 +24,8 @@ interface AnimeRow {
 }
 
 export async function GET(request: Request) {
-  if (!(await isAdminRequest(request))) {
-    return Response.json({ ok: false, error: "Admin login required" }, { status: 401 });
+  if (!(await isStaffRequest(request))) {
+    return Response.json({ ok: false, error: "Staff login required" }, { status: 401 });
   }
 
   const url = new URL(request.url);
@@ -53,7 +53,11 @@ export async function GET(request: Request) {
     const { data } = await sb
       .from("anime")
       .select("id, title, anilist_id, status")
-      .or("status.eq.RELEASING,status.eq.NOT_YET_RELEASED")
+      // Airing titles, plus anything still awaiting review so staff can
+      // attach a release date to their own submissions.
+      .or(
+        "status.eq.RELEASING,status.eq.NOT_YET_RELEASED,moderation_status.eq.pending"
+      )
       .eq("completed", false)
       .limit(200);
     const rows = (data as AnimeRow[] | null) ?? [];
@@ -130,8 +134,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (!(await isAdminRequest(request))) {
-    return Response.json({ ok: false, error: "Admin login required" }, { status: 401 });
+  if (!(await isStaffRequest(request))) {
+    return Response.json({ ok: false, error: "Staff login required" }, { status: 401 });
   }
 
   const body = (await request.json().catch(() => null)) as {
