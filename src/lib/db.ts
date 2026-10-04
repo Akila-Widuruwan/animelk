@@ -157,17 +157,87 @@ export async function fetchHome(): Promise<HomeData | null> {
       image: t.image_url ?? "",
     }));
 
+    const allItems = allRows.map(mapAnime);
+
+    // "Latest Episode" — RELEASING anime ordered by their most recently added
+    // episode, each pointing at its last uploaded episode.
+    let latestEpisodeItems: Anime[] | null = null;
+    if (sectionRows.some((s) => s.slug === "latest-episode")) {
+      const { data: relRows } = await sb
+        .from("anime")
+        .select("*, anime_genres(genres(name))")
+        .eq("status", "RELEASING")
+        .order("created_at", { ascending: false });
+      const relItems = ((relRows as unknown as DbAnime[]) ?? []).map(mapAnime);
+
+      // Episodes carry no created_at, but `id` is an identity column, so the
+      // highest id is the most recently added episode.
+      const lastEp: Record<number, number> = {};
+      const latestEpId: Record<number, number> = {};
+      const ids = relItems.map((a) => a.id);
+      if (ids.length > 0) {
+        const { data: epRows } = await sb
+          .from("episodes")
+          .select("id, anime_id, episode_number, video_url")
+          .in("anime_id", ids)
+          .order("id", { ascending: false });
+        for (const r of ((epRows as unknown as {
+          id: number;
+          anime_id: number;
+          episode_number: number;
+          video_url: string | null;
+        }[]) ?? [])) {
+          if (!r.video_url) continue;
+          if (latestEpId[r.anime_id] === undefined) latestEpId[r.anime_id] = r.id;
+          if (lastEp[r.anime_id] === undefined || r.episode_number > lastEp[r.anime_id]) {
+            lastEp[r.anime_id] = r.episode_number;
+          }
+        }
+      }
+
+      // Most recently added episode first; anime with no episodes go last.
+      latestEpisodeItems = relItems
+        .map((a) => ({ ...a, lastEpisode: lastEp[a.id] ?? 1 }))
+        .sort((x, y) => (latestEpId[y.id] ?? 0) - (latestEpId[x.id] ?? 0));
+    }
+
     const sections: HomeSection[] = (sectionRows ?? []).map((s) => {
+      if (s.slug === "latest-episode") {
+        return {
+          slug: s.slug,
+          title: s.title,
+          kind: s.kind,
+          panel: s.panel,
+          viewAllUrl: s.view_all_url,
+          items: latestEpisodeItems ?? [],
+          topics: null,
+        };
+      }
+
+      // "Airing Now" is driven by each anime's status, which the admin picks on
+      // the Anime page — only titles marked RELEASING belong in this row.
+      if (s.slug === "airing") {
+        return {
+          slug: s.slug,
+          title: s.title,
+          kind: s.kind,
+          panel: s.panel,
+          viewAllUrl: s.view_all_url,
+          items: allItems.filter((a) => a.status === "RELEASING"),
+          topics: null,
+        };
+      }
+
       let items: Anime[] =
         s.kind === "filter"
-          ? allRows.map(mapAnime)
+          ? allItems
           : (s.section_items ?? [])
               .filter((si) => si.anime)
               .sort((a, b) => a.position - b.position)
               .map((si) => mapAnime(si.anime));
 
       if (items.length === 0 && s.kind !== "topics" && s.kind !== "filter") {
-        const all = allRows.map(mapAnime);
+        const all = allItems;
         if (s.kind === "top10") {
           items = [...all]
             .sort((a, b) => b.averageScore - a.averageScore)

@@ -18,6 +18,8 @@ export interface Anime {
   isDub?: boolean;
   trailerUrl?: string;
   completed?: boolean;
+  /** Highest episode number available on the site (Latest Episode row). */
+  lastEpisode?: number;
 }
 
 export const db = data as Record<string, Anime[]>;

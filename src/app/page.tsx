@@ -60,8 +60,7 @@ function fallbackSections(): HomeSection[] {
         image: topicImages[i],
       })),
     },
-    { slug: "new-series", title: "New Anime Series", kind: "panel", panel: true, viewAllUrl: "#", items: db.trending, topics: null },
-    { slug: "new-anime-movies", title: "New Anime Movies", kind: "carousel", panel: false, viewAllUrl: "#", items: db.movies, topics: null },
+    { slug: "latest-episode", title: "Latest Episode", kind: "carousel", panel: false, viewAllUrl: "#", items: db.airing.map((a) => ({ ...a, lastEpisode: a.episodes || 1 })), topics: null },
     { slug: "airing", title: "Airing Now", kind: "carousel", panel: false, viewAllUrl: "#", items: db.airing, topics: null },
     { slug: "new-anime", title: "New Anime", kind: "carousel", panel: false, viewAllUrl: "#", items: db.popular, topics: null },
     { slug: "top-series", title: "Top 10 Anime Series Today", kind: "top10", panel: false, viewAllUrl: null, items: db.topToday, topics: null },
@@ -77,7 +76,7 @@ function fallbackSections(): HomeSection[] {
 
 const ANCHORS: Record<string, string> = {
   categories: "categories",
-  "new-series": "new-series",
+  "latest-episode": "latest-episode",
   airing: "airing",
   browse: "browse",
   "anime-movies": "anime-movies",
@@ -94,7 +93,13 @@ function SectionBody({ section }: { section: HomeSection }) {
     case "filter":
       return <Browse pool={section.items} />;
     default:
-      return <MediaRow items={section.items} panel={section.kind === "panel"} />;
+      return (
+        <MediaRow
+          items={section.items}
+          panel={section.kind === "panel"}
+          episodeLinks={section.slug === "latest-episode"}
+        />
+      );
   }
 }
 

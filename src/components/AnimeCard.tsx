@@ -8,11 +8,17 @@ interface Props {
   anime: Anime;
   variant?: "carousel" | "grid";
   className?: string;
+  /** When set, the card links straight to that episode instead of the anime page. */
+  episode?: number;
 }
 
-export default function AnimeCard({ anime, variant = "grid", className = "" }: Props) {
+export default function AnimeCard({ anime, variant = "grid", className = "", episode }: Props) {
   const [quality] = qualityBadges(anime);
   const meta = [year(anime), anime.genres[0] ?? "Anime"].filter(Boolean).join(" • ");
+  const href =
+    episode && episode > 0
+      ? `/anime/${anime.id}/watch?ep=${episode}`
+      : `/anime/${anime.id}`;
 
   return (
     <div
@@ -23,7 +29,7 @@ export default function AnimeCard({ anime, variant = "grid", className = "" }: P
       } ${className}`}
     >
       <Link
-        href={`/anime/${anime.id}`}
+        href={href}
         aria-label={anime.title}
         className="relative block aspect-[2/3] overflow-hidden rounded-xl bg-panel ring-1 ring-white/[0.06] transition-all duration-300 group-hover:scale-[1.04] group-hover:shadow-[0_18px_45px_rgba(0,0,0,0.55)] group-hover:ring-primary/40"
       >
@@ -48,9 +54,9 @@ export default function AnimeCard({ anime, variant = "grid", className = "" }: P
           >
             {quality.label}
           </span>
-          {anime.episodes > 0 && (
+          {(episode ?? anime.episodes) > 0 && (
             <span className="rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white backdrop-blur">
-              EP {anime.episodes}
+              EP {episode ?? anime.episodes}
             </span>
           )}
         </div>

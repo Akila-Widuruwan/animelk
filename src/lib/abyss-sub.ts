@@ -78,12 +78,24 @@ export async function pushSubtitleToAbyss(opts: {
     }
     return { ok: false, error: `Abyss upload failed (HTTP ${res.status}).` };
   } catch (e) {
-    if (e instanceof DOMException && (e.name === "TimeoutError" || e.name === "AbortError")) {
+    const name = e instanceof Error ? e.name : "";
+    if (name === "TimeoutError" || name === "AbortError") {
       return {
         ok: false,
         error: "The abyss-sub Edge Function did not respond — is it deployed?",
       };
     }
-    return { ok: false, error: e instanceof Error ? e.message : "Network error" };
+    // A cross-origin fetch failure surfaces as a bare "Failed to fetch"
+    // (usually a missing function or a rejected CORS preflight).
+    const message = e instanceof Error ? e.message : "";
+    if (e instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(message)) {
+      return {
+        ok: false,
+        error:
+          "Could not reach the abyss-sub Edge Function. Deploy it in your Supabase " +
+          "project (Edge Functions -> abyss-sub), then try again.",
+      };
+    }
+    return { ok: false, error: message || "Network error" };
   }
 }

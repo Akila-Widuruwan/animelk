@@ -1,0 +1,19 @@
+# Supabase project configuration for the ANIMELK repo.
+#
+# The Edge Function `abyss-sub` performs the secure abyss.to subtitle upload:
+# it verifies the caller's Supabase JWT, converts VTT -> SRT and talks to the
+# abyss.to API with credentials that only ever live as function secrets.
+#
+# Deploy:
+#   supabase link --project-ref <your-project-ref>
+#   supabase secrets set ABYSS_EMAIL=... ABYSS_PASSWORD=... ADMIN_EMAILS=...
+#   supabase functions deploy abyss-sub
+#
+# See supabase/functions/abyss-sub/README.md.
+
+project_id = "animelk"
+
+[functions.abyss-sub]
+# Require a valid Supabase access token on every invocation; the function then
+# re-checks that the verified email / role is allowed to upload.
+verify_jwt = true

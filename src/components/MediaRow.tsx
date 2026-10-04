@@ -7,14 +7,22 @@ import AnimeCard from "./AnimeCard";
 export default function MediaRow({
   items,
   panel = false,
+  episodeLinks = false,
 }: {
   items: Anime[];
   panel?: boolean;
+  /** Link each card to the anime's last episode instead of its detail page. */
+  episodeLinks?: boolean;
 }) {
   const list = (
     <Carousel className="items-stretch">
       {items.map((a) => (
-        <AnimeCard key={a.id} anime={a} variant="carousel" />
+        <AnimeCard
+          key={a.id}
+          anime={a}
+          variant="carousel"
+          episode={episodeLinks ? a.lastEpisode : undefined}
+        />
       ))}
     </Carousel>
   );
