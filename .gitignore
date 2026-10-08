@@ -44,3 +44,12 @@ next-env.d.ts
 .netlify
 
 tailwindcss-*.log
+
+# Local downloader scratch — the cookie jar holds live session cookies and the
+# upload helper has an appwrite key in it, so neither may reach the repository.
+# Remove the credentials first if you ever want to commit them.
+cookies.txt
+abyss_remote_upload.py
+
+# Codebuff thread metadata
+.freebuff/
