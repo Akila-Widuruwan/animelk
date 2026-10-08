@@ -3,16 +3,15 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 
 /**
- * Monetag ad tags. Each snippet they hand out only builds a loader element
- * (<script data-zone src=".../tag.min.js">), and Next.js keeps inline script
- * markup out of the server HTML, so the loaders are written directly. React
- * hoists them into the document head — the placement Monetag asks for — which
- * installs their click handlers before a visitor can click a poster.
+ * Monetag ad tag (zone 292661). Written as the plain script element itself
+ * rather than through next/script: Next routes script markup into the client
+ * payload instead of the server HTML, while React hoists a plain async script
+ * into the document head — the placement Monetag asks for.
  */
-const MONETAG_TAGS = [
-  { zone: "11986387", src: "https://al5sm.com/tag.min.js" },
-  { zone: "11986434", src: "https://nap5k.com/tag.min.js" },
-];
+const MONETAG_TAG = {
+  zone: "292661",
+  src: "https://quge5.com/88/tag.min.js",
+};
 
 const inter = Inter({
   variable: "--font-inter",
@@ -41,16 +40,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       data-scroll-behavior="smooth"
     >
       <body className="flex min-h-full flex-col" suppressHydrationWarning>
-        {/* Plain async script tags, which React hoists into the document head. */}
-        {MONETAG_TAGS.map(({ zone, src }) => (
-          <script
-            key={zone}
-            id={`monetag-${zone}`}
-            async
-            src={src}
-            data-zone={zone}
-          />
-        ))}
+        {/* Plain async script tag, which React hoists into the document head. */}
+        <script
+          id="monetag-tag"
+          async
+          data-cfasync="false"
+          src={MONETAG_TAG.src}
+          data-zone={MONETAG_TAG.zone}
+        />
         {children}
       </body>
     </html>
