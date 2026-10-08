@@ -9,6 +9,7 @@ import AnimeCard from "@/components/AnimeCard";
 import SectionHeading from "@/components/SectionHeading";
 import EpisodeSidebar from "@/components/watch/EpisodeSidebar";
 import AnimeWatchInfo from "@/components/watch/AnimeWatchInfo";
+import Comments from "@/components/comments/Comments";
 import { IconChevronLeft, IconChevronRight } from "@/components/Icons";
 import { allAnime, db } from "@/lib/anime";
 import { getAnime, getEpisodes, getRelated } from "@/lib/db";
@@ -204,6 +205,14 @@ export default async function WatchPage({
                 isMovie={isMovie}
                 videoUrl={externalPlayerUrl}
                 subtitles={current?.subtitles ?? []}
+              />
+
+              {/* One thread per episode; a movie with no episode row talks on
+                  the title itself, so every episode and every movie has one. */}
+              <Comments
+                animeId={anime.id}
+                episodeId={current?.id ?? null}
+                subject={isMovie ? "this movie" : `Episode ${episodeLabel(ep)}`}
               />
 
               {!isMovie && numbers.length > 1 && (

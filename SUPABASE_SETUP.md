@@ -35,6 +35,13 @@ to change `episodes.episode_number` from `integer` to `numeric` — without it,
 to the anime's episode count, which invented boxes for episodes that do not
 exist; the site now lists only the episodes that are actually uploaded.
 
+Episode and movie comments need
+[`supabase/migrations/0012_comments.sql`](./supabase/migrations/0012_comments.sql)
+— it creates `comments` (public read, signed-in viewers write only their own
+rows and may delete only what they wrote). Until this migration is run, the
+comment section stays hidden and the watch page looks exactly as it did before,
+so it is safe to deploy the code first.
+
 For direct `.vtt` subtitle uploads on **non-abyss** episodes, run
 [`supabase/migrations/0006_subtitles.sql`](./supabase/migrations/0006_subtitles.sql)
 — it creates the public `subtitles` storage bucket and lets admins and staff
