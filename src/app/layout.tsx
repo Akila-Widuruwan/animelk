@@ -1,16 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 
 /**
- * Monetag click-ad tag (zone 11986387). It builds its own loader element and
- * appends it to <body>, so it has to run as the inline snippet rather than
- * through the Script `src` prop. Monetag's script installs the click handler
- * that monetises the poster and thumbnail clicks across the site.
+ * Monetag click-ad tag (zone 11986387). Their snippet only builds a loader
+ * element, and Next.js keeps inline script markup out of the server HTML, so the
+ * loader is written directly as <script async src data-zone>. React hoists that
+ * into the document head, which is the placement Monetag asks for. The loader
+ * installs the click handler that monetises poster and thumbnail clicks.
  */
-const MONETAG_CLICK_TAG =
-  "(function(s){s.dataset.zone='11986387',s.src='https://al5sm.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))";
+const MONETAG_ZONE = "11986387";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -39,12 +38,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       data-scroll-behavior="smooth"
     >
       <body className="flex min-h-full flex-col" suppressHydrationWarning>
-        {children}
-        <Script
+        {/* Monetag's loader: a plain async script tag, which React hoists into
+            the document head, as close to their "paste at the end of <head>"
+            instruction as an App Router layout can get. */}
+        <script
           id="monetag-click-tag"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{ __html: MONETAG_CLICK_TAG }}
+          async
+          src="https://al5sm.com/tag.min.js"
+          data-zone={MONETAG_ZONE}
         />
+        {children}
       </body>
     </html>
   );
