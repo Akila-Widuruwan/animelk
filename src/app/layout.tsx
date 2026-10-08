@@ -3,15 +3,12 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 
 /**
- * Monetag ad tag (zone 292661). Written as the plain script element itself
- * rather than through next/script: Next routes script markup into the client
- * payload instead of the server HTML, while React hoists a plain async script
- * into the document head — the placement Monetag asks for.
+ * Monetag's tag is loaded by /ad-gate.js rather than pasted here, because that
+ * file has to decide whether to load it before any ad request goes out: it keeps
+ * ads off for ten minutes after a visitor clicks one. See public/ad-gate.js for
+ * the zone, the detection rules and the rest of the reasoning.
  */
-const MONETAG_TAG = {
-  zone: "292661",
-  src: "https://quge5.com/88/tag.min.js",
-};
+const AD_GATE_SRC = "/ad-gate.js";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -40,14 +37,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       data-scroll-behavior="smooth"
     >
       <body className="flex min-h-full flex-col" suppressHydrationWarning>
-        {/* Plain async script tag, which React hoists into the document head. */}
-        <script
-          id="monetag-tag"
-          async
-          data-cfasync="false"
-          src={MONETAG_TAG.src}
-          data-zone={MONETAG_TAG.zone}
-        />
+        {/* A plain async script tag, which React hoists into the document head. */}
+        <script id="ad-gate" async src={AD_GATE_SRC} />
         {children}
       </body>
     </html>
