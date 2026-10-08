@@ -29,8 +29,13 @@ export async function GET(req: Request) {
       { ok: true, results },
       {
         headers: {
-          // Cheap CDN/browser reuse of identical searches.
-          "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=600",
+          // Per-query answers must never enter a shared cache. Netlify's edge and
+          // durable caches key this route only on the parameters listed in the
+          // runtime's `Netlify-Vary` header, which does not include `q` — so one
+          // stored response used to be served for every search, making unrelated
+          // queries return the same (often empty) result. Search volume is low
+          // and the provider already caches hits in-process for 5 minutes.
+          "Cache-Control": "no-store",
         },
       }
     );
