@@ -18,13 +18,15 @@ import TmdbBrowser from "@/components/admin/TmdbBrowser";
 import CheckUrls from "@/components/admin/CheckUrls";
 import AiringSchedule from "@/components/admin/AiringSchedule";
 import SubtitleUpdater from "@/components/admin/SubtitleUpdater";
+import Requests from "@/components/admin/Requests";
 import { Spinner } from "@/components/admin/ui";
 
-type Tab = "dashboard" | "submissions" | "anime" | "sections" | "hero" | "topics" | "menu" | "tmdb" | "check" | "airing" | "subtitles" | "settings";
+type Tab = "dashboard" | "submissions" | "requests" | "anime" | "sections" | "hero" | "topics" | "menu" | "tmdb" | "check" | "airing" | "subtitles" | "settings";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
   { id: "submissions", label: "Submissions" },
+  { id: "requests", label: "📨 Anime Requests" },
   { id: "anime", label: "Anime" },
   { id: "sections", label: "Sections" },
   { id: "hero", label: "Hero Slides" },
@@ -258,6 +260,7 @@ where id = '${session.user.id}';`}
         <main className="min-w-0 flex-1 pb-16">
           {tab === "dashboard" && <Dashboard />}
           {tab === "submissions" && <Submissions />}
+          {tab === "requests" && <Requests />}
           {tab === "anime" && <AnimeManager />}
           {tab === "sections" && <SectionsManager />}
           {tab === "hero" && <HeroManager />}

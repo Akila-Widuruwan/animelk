@@ -120,6 +120,25 @@ body {
   }
 }
 
+/* Request counts settle in with a small pop when realtime data arrives. */
+@keyframes ak-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.16);
+    color: #fcd34d;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.ak-pop {
+  display: inline-block;
+  animation: ak-pop 0.4s ease;
+}
+
 @keyframes ak-drawer-in {
   from {
     transform: translateX(-100%);
@@ -152,6 +171,9 @@ body {
     animation: none;
   }
   .eq-bar {
+    animation: none;
+  }
+  .ak-pop {
     animation: none;
   }
 }

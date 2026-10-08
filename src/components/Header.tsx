@@ -19,7 +19,7 @@ const MENU = [
   { label: "Series", href: "/#new-series", sub: false },
   { label: "Genres", href: "/#categories", sub: true },
   { label: "Top Airing", href: "/#airing", sub: false, badge: "New" },
-  { label: "Request", href: "/#contact", sub: false },
+  { label: "Request Anime", href: "/request", sub: false },
 ];
 
 export default function Header({ solid = false }: { solid?: boolean }) {
