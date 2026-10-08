@@ -3,13 +3,16 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 
 /**
- * Monetag click-ad tag (zone 11986387). Their snippet only builds a loader
- * element, and Next.js keeps inline script markup out of the server HTML, so the
- * loader is written directly as <script async src data-zone>. React hoists that
- * into the document head, which is the placement Monetag asks for. The loader
- * installs the click handler that monetises poster and thumbnail clicks.
+ * Monetag ad tags. Each snippet they hand out only builds a loader element
+ * (<script data-zone src=".../tag.min.js">), and Next.js keeps inline script
+ * markup out of the server HTML, so the loaders are written directly. React
+ * hoists them into the document head — the placement Monetag asks for — which
+ * installs their click handlers before a visitor can click a poster.
  */
-const MONETAG_ZONE = "11986387";
+const MONETAG_TAGS = [
+  { zone: "11986387", src: "https://al5sm.com/tag.min.js" },
+  { zone: "11986434", src: "https://nap5k.com/tag.min.js" },
+];
 
 const inter = Inter({
   variable: "--font-inter",
@@ -38,15 +41,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       data-scroll-behavior="smooth"
     >
       <body className="flex min-h-full flex-col" suppressHydrationWarning>
-        {/* Monetag's loader: a plain async script tag, which React hoists into
-            the document head, as close to their "paste at the end of <head>"
-            instruction as an App Router layout can get. */}
-        <script
-          id="monetag-click-tag"
-          async
-          src="https://al5sm.com/tag.min.js"
-          data-zone={MONETAG_ZONE}
-        />
+        {/* Plain async script tags, which React hoists into the document head. */}
+        {MONETAG_TAGS.map(({ zone, src }) => (
+          <script
+            key={zone}
+            id={`monetag-${zone}`}
+            async
+            src={src}
+            data-zone={zone}
+          />
+        ))}
         {children}
       </body>
     </html>
