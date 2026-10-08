@@ -16,7 +16,7 @@ import("playwright").then(async ({ chromium }) => {
   console.log("active ep visible:", await p.locator('a[aria-current="true"]:visible').count() > 0);
   console.log("More Like This:", await p.locator("text=More Like This").isVisible());
   console.log("More Like This cards:", await p.locator("section:has(h5:text('More Like This')) a[href^='/anime/']").count());
-  console.log("Popular on ANIMELK:", await p.locator("text=Popular on ANIMELK").isVisible());
+  console.log("Popular on AniLanka:", await p.locator("text=Popular on AniLanka").isVisible());
 
   await p.locator("text=Add to List").click();
   await p.waitForTimeout(300);

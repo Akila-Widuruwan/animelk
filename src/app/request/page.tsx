@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import RequestClient from "@/components/request/RequestClient";
 
 export const metadata: Metadata = {
-  title: "Request an Anime – ANIMELK",
+  title: "Request an Anime – AniLanka",
   description:
     "Can't find the anime you're looking for? Search AniList and request it — see what the community wants us to add next.",
 };

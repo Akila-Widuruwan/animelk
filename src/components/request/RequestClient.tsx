@@ -233,7 +233,7 @@ export default function RequestClient() {
         ) : (
           <div className="mt-6 rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-6 py-10 text-center">
             <p className="text-[14px] font-bold text-white">
-              Search for an anime you want to see on AnimeLK.
+              Search for an anime you want to see on AniLanka.
             </p>
             <p className="mt-1.5 text-[12.5px] text-muted">
               Pick a result and we&apos;ll track the demand for it.

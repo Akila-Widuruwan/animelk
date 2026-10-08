@@ -18,7 +18,8 @@ import {
   statusLabel,
   year,
 } from "@/lib/anime";
-import { getAnime, getRelated } from "@/lib/db";
+import { getAnime, getEpisodes, getRelated } from "@/lib/db";
+import { episodeLabel, episodeNumbers } from "@/lib/episode-number";
 
 export const revalidate = 60;
 
@@ -34,7 +35,7 @@ export async function generateMetadata({
   const { id } = await params;
   const anime = allAnime.find((a) => a.id === Number(id));
   return {
-    title: anime ? `${anime.title} – ANIMELK` : "ANIMELK",
+    title: anime ? `${anime.title} – AniLanka` : "AniLanka",
     description: anime?.description.slice(0, 160),
   };
 }
@@ -50,12 +51,18 @@ export default async function AnimePage({
 
   const isMovie = anime.format === "MOVIE" || anime.format === "SPECIAL";
   const episodeCount = anime.episodes || 0;
+  const episodes = await getEpisodes(anime.id);
+  // A part 2 continues the previous part's numbering (13-24), so the episode
+  // boxes list the numbers that exist instead of counting 1..episodeCount.
+  const numbers = episodeNumbers(episodes);
+  const firstEpisode = numbers[0];
+  const uploadCount = numbers.length;
   const related = await getRelated(anime, 7);
 
   const info: [string, string][] = [
     ["Status", statusLabel(anime.status)],
     ["Type", formatLabel(anime.format)],
-    ["Episodes", episodeCount ? String(episodeCount) : "—"],
+    ["Episodes", uploadCount ? String(uploadCount) : episodeCount ? String(episodeCount) : "—"],
     ["Duration", anime.duration ? `${anime.duration} mins` : "—"],
     ["Season", String(year(anime))],
     ["Score", `${score(anime)} / 10`],
@@ -165,11 +172,17 @@ export default async function AnimePage({
 
               <div className="mt-6 flex flex-wrap items-center justify-center gap-4 md:justify-start">
                 <Link
-                  href={`/anime/${anime.id}/watch`}
+                  href={
+                    isMovie || !firstEpisode
+                      ? `/anime/${anime.id}/watch`
+                      : `/anime/${anime.id}/watch?ep=${firstEpisode}`
+                  }
                   className="bg-gradient-btn flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-bold text-white shadow-[0_10px_25px_rgba(123,97,255,0.35)] transition hover:opacity-90"
                 >
                   <IconPlay className="h-5 w-5" />
-                  {isMovie ? "Watch Now" : "Play Episode 1"}
+                  {isMovie || !firstEpisode
+                    ? "Watch Now"
+                    : `Play Episode ${episodeLabel(firstEpisode)}`}
                 </Link>
                 <button className="flex items-center gap-2 rounded-full border border-white/25 px-7 py-3.5 text-sm font-semibold text-white transition hover:border-primary hover:bg-primary/20">
                   <IconBookmark className="h-4 w-4" />
@@ -191,28 +204,34 @@ export default async function AnimePage({
             </div>
           </div>
 
-          {episodeCount > 1 && (
+          {numbers.length > 0 && (
             <section className="mt-16">
               <SectionHeading title="Episodes" />
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
-                {Array.from(
-                  { length: Math.min(episodeCount, 32) },
-                  (_, i) => i + 1
-                ).map((n) => (
+                {numbers.slice(0, 32).map((n) => (
                   <Link
                     key={n}
                     href={`/anime/${anime.id}/watch?ep=${n}`}
                     className="rounded-lg border border-white/10 bg-panel py-3 text-center text-sm font-bold text-white/85 transition hover:border-primary hover:bg-primary/15 hover:text-white"
                   >
-                    {n}
+                    {episodeLabel(n)}
                   </Link>
                 ))}
               </div>
-              {episodeCount > 32 && (
+              {numbers.length > 32 && (
                 <p className="mt-4 text-[13px] text-muted">
-                  Showing 32 of {episodeCount} episodes
+                  Showing 32 of {numbers.length} episodes
                 </p>
               )}
+            </section>
+          )}
+
+          {numbers.length === 0 && episodeCount > 1 && (
+            <section className="mt-16">
+              <SectionHeading title="Episodes" />
+              <p className="rounded-xl border border-white/[0.06] bg-panel/40 px-6 py-8 text-center text-[14px] text-muted">
+                No episodes have been uploaded yet.
+              </p>
             </section>
           )}
 

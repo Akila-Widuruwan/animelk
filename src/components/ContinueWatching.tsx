@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { allAnime } from "@/lib/anime";
+import { fetchContinueWatching } from "@/lib/viewer-data";
+import { useViewer } from "@/lib/viewer-auth";
 import { IconPlay } from "./Icons";
 
 const RESUME_PREFIX = "animelk-resume";
@@ -26,72 +28,84 @@ function formatRemaining(seconds: number): string {
   return `${h}h ${m % 60}m left`;
 }
 
+/**
+ * Signed-out visitors resume from the browser's own saved positions, the way
+ * the site worked before accounts existed.
+ */
+async function collectLocal(): Promise<ResumeItem[]> {
+  const entries: { animeId: number; ep: number; time: number }[] = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith(RESUME_PREFIX)) continue;
+      const m = key.match(/^animelk-resume-(\d+)-(\d+)$/);
+      if (!m) continue;
+      const time = Number(localStorage.getItem(key));
+      if (!Number.isFinite(time) || time < 60) continue;
+      entries.push({ animeId: Number(m[1]), ep: Number(m[2]), time });
+    }
+  } catch {
+    return [];
+  }
+  if (entries.length === 0) return [];
+
+  const ids = [...new Set(entries.map((e) => e.animeId))];
+    const meta = new Map<number, { title: string; image: string | null; durationMin: number | null }>();
+    const hidden = new Set<number>();
+    try {
+      const sb = supabaseBrowser();
+      const { data } = await sb
+        .from("anime")
+        .select("id, title, cover_image, banner_image, duration, is_active")
+        .in("id", ids);
+      for (const a of (data as Record<string, unknown>[] | null) ?? []) {
+        // Titles switched OFF in the admin panel are hidden from the public
+        // site, including this resume row.
+        if (a.is_active === false) {
+          hidden.add(a.id as number);
+          continue;
+        }
+        meta.set(a.id as number, {
+          title: a.title as string,
+          image: (a.banner_image as string) || (a.cover_image as string) || null,
+          durationMin: (a.duration as number) ?? null,
+        });
+      }
+    } catch {
+      // fall back to static data below
+    }
+    const staticById = new Map(allAnime.map((a) => [a.id, a]));
+    return entries
+      .filter((e) => !hidden.has(e.animeId))
+    .map((e) => {
+      const db = meta.get(e.animeId);
+      const st = staticById.get(e.animeId);
+      return {
+        animeId: e.animeId,
+        ep: e.ep,
+        time: e.time,
+        title: db?.title ?? st?.title ?? `Anime #${e.animeId}`,
+        image: db?.image ?? st?.bannerImage ?? st?.coverImage ?? null,
+        durationMin: db?.durationMin ?? (st && st.duration > 0 ? st.duration : null),
+      };
+    });
+}
+
 export default function ContinueWatching() {
   const [items, setItems] = useState<ResumeItem[] | null>(null);
+  const { viewer, loading } = useViewer();
 
   useEffect(() => {
-    const collect = async () => {
-      const entries: { animeId: number; ep: number; time: number }[] = [];
-      try {
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (!key || !key.startsWith(RESUME_PREFIX)) continue;
-          const m = key.match(/^animelk-resume-(\d+)-(\d+)$/);
-          if (!m) continue;
-          const time = Number(localStorage.getItem(key));
-          if (!Number.isFinite(time) || time < 60) continue;
-          entries.push({ animeId: Number(m[1]), ep: Number(m[2]), time });
-        }
-      } catch {
-        return;
-      }
-      if (entries.length === 0) return;
-
-      const ids = [...new Set(entries.map((e) => e.animeId))];
-      const meta = new Map<number, { title: string; image: string | null; durationMin: number | null }>();
-      const hidden = new Set<number>();
-      try {
-        const sb = supabaseBrowser();
-        const { data } = await sb
-          .from("anime")
-          .select("id, title, cover_image, banner_image, duration, is_active")
-          .in("id", ids);
-        for (const a of (data as Record<string, unknown>[] | null) ?? []) {
-          // Titles switched OFF in the admin panel are hidden from the public
-          // site, including this resume row.
-          if (a.is_active === false) {
-            hidden.add(a.id as number);
-            continue;
-          }
-          meta.set(a.id as number, {
-            title: a.title as string,
-            image: (a.banner_image as string) || (a.cover_image as string) || null,
-            durationMin: (a.duration as number) ?? null,
-          });
-        }
-      } catch {
-        // fall back to static data below
-      }
-      const staticById = new Map(allAnime.map((a) => [a.id, a]));
-      const rows = entries
-        .filter((e) => !hidden.has(e.animeId))
-        .map((e) => {
-          const db = meta.get(e.animeId);
-          const st = staticById.get(e.animeId);
-          return {
-            animeId: e.animeId,
-            ep: e.ep,
-            time: e.time,
-            title: db?.title ?? st?.title ?? `Anime #${e.animeId}`,
-            image: db?.image ?? st?.bannerImage ?? st?.coverImage ?? null,
-            durationMin: db?.durationMin ?? (st && st.duration > 0 ? st.duration : null),
-          };
-        });
-
-      setItems(rows);
+    if (loading) return;
+    let cancelled = false;
+    void (async () => {
+      const rows = viewer ? await fetchContinueWatching(12) : await collectLocal();
+      if (!cancelled) setItems(rows);
+    })();
+    return () => {
+      cancelled = true;
     };
-    void collect();
-  }, []);
+  }, [loading, viewer]);
 
   if (!items || items.length === 0) return null;
 

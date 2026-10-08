@@ -3,17 +3,19 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { IconSearch } from "../Icons";
+import { episodeLabel, sameEpisode } from "@/lib/episode-number";
 
 interface Props {
   animeId: number;
   currentEp: number;
-  total: number;
+  /** The episode numbers that exist, ascending (13-24, or 12, 12.5, 13...). */
+  numbers: number[];
   episodeTitles: Record<number, string>;
   withVideo: number[];
   orientation: "vertical" | "horizontal";
 }
 
-const pad = (n: number) => String(n).padStart(2, "0");
+const pad = (n: number) => episodeLabel(n).padStart(2, "0");
 
 function EpisodeButton({
   animeId,
@@ -48,25 +50,24 @@ function EpisodeButton({
 export default function EpisodeSidebar({
   animeId,
   currentEp,
-  total,
+  numbers,
   episodeTitles,
   withVideo,
   orientation,
 }: Props) {
   const [q, setQ] = useState("");
   const hasVideo = useMemo(() => new Set(withVideo), [withVideo]);
+  const total = numbers.length;
 
   const nums = useMemo(() => {
-    const limit = Math.min(total, 500);
-    const all = Array.from({ length: limit }, (_, i) => i + 1);
     const query = q.trim().toLowerCase();
-    if (!query) return all;
-    return all.filter(
+    if (!query) return numbers;
+    return numbers.filter(
       (n) =>
-        String(n).includes(query) ||
+        episodeLabel(n).includes(query) ||
         (episodeTitles[n] ?? "").toLowerCase().includes(query)
     );
-  }, [q, total, episodeTitles]);
+  }, [q, numbers, episodeTitles]);
 
   const search =
     total > 24 ? (
@@ -107,7 +108,7 @@ export default function EpisodeSidebar({
               key={n}
               animeId={animeId}
               n={n}
-              active={n === currentEp}
+              active={sameEpisode(n, currentEp)}
               hasVideo={hasVideo.has(n)}
             />
           ))}
@@ -136,7 +137,7 @@ export default function EpisodeSidebar({
             key={n}
             animeId={animeId}
             n={n}
-            active={n === currentEp}
+            active={sameEpisode(n, currentEp)}
             hasVideo={hasVideo.has(n)}
           />
         ))}

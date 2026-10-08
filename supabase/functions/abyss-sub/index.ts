@@ -1,26 +1,48 @@
 // Supabase Edge Function: abyss-sub
 //
-// Secure bridge between the ANIMELK admin panel and the abyss.to subtitle API.
+// Secure bridge between the AniLanka admin panel and the abyss.to subtitle API.
 //
-// The browser never sees the abyss.to credentials or the abyss JWT — they live
-// only in this function's environment (Supabase Edge Function secrets):
+// The browser never sees the abyss.to credentials or the abyss JWT.
 //
-//   ABYSS_EMAIL     abyss.to account email      (required)
-//   ABYSS_PASSWORD  abyss.to account password   (required)
+// Accounts come from the `abyss_accounts` table (managed in the admin
+// Subtitles tab). Uploads rotate: the least recently used active account is
+// tried first, and any account that fails - sign-in, expired token, or a
+// rejected upload - is skipped in favour of the next one. The single account
+// in this function's environment is kept as a final fallback, so uploads keep
+// working while no database account has been added yet.
+//
+//   ABYSS_EMAIL     abyss.to account email      (optional fallback)
+//   ABYSS_PASSWORD  abyss.to account password   (optional fallback)
 //   ADMIN_EMAILS    comma-separated allow-list  (optional, recommended)
 //   ABYSS_API_KEY   abyss.to api key            (optional read fallback)
 //
+// SUPABASE_SERVICE_ROLE_KEY is injected by Supabase and is used for one thing
+// only: reading/updating the abyss_accounts table, which RLS closes to every
+// client because it holds recoverable passwords.
+//
 // Request (POST, JSON):
 //   { fileId: string, language: "Sinhala" | "English", filename?: string, content: string }
+//   { action: "test", accountId?: number }   - admin panel verifies sign-in
 //   Authorization: Bearer <supabase access token>
 //
 // Response:
-//   { success: true,  message: "Sinhala subtitle uploaded successfully." }
-//   { success: false, error:   "..." }
+//   { success: true,  message: "Sinhala subtitle uploaded successfully via …" }
+//   { success: false, error:   "...", detail?: "account: reason; …" }
 //
 // The abyss video id at the end of an embed URL IS the subtitle API file id.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+/**
+ * Bumped whenever the request/response contract changes.
+ *
+ * Every reply carries it, and the admin panel refuses to trust a reply without
+ * it. That is deliberate: an older deployment of this function (the single
+ * ABYSS_EMAIL revision) answers with a bare "Failed to upload subtitle to
+ * Abyss." that looks like an account problem but is really a stale deployment.
+ * Without a marker, that is impossible to tell apart from a real failure.
+ */
+const FUNCTION_VERSION = 2;
 
 const ABYSS_API_BASE = "https://api.abyss.to";
 const ALLOWED_LANGUAGES = ["Sinhala", "English"] as const;
@@ -34,7 +56,12 @@ const CORS: Record<string, string> = {
 };
 
 function json(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
+  // Stamp the version onto every object reply (never onto an array).
+  const payload =
+    body && typeof body === "object" && !Array.isArray(body)
+      ? { version: FUNCTION_VERSION, ...(body as Record<string, unknown>) }
+      : body;
+  return new Response(JSON.stringify(payload), {
     status,
     headers: { ...CORS, "content-type": "application/json" },
   });
@@ -118,26 +145,119 @@ export function textToSrt(input: string): string | null {
 }
 
 /* ------------------------------------------------------------------ */
-/* abyss.to client (token cache)                                       */
+/* abyss.to accounts (database pool, secrets as fallback)              */
 /* ------------------------------------------------------------------ */
 
-let abyssToken: string | null = null;
-let abyssTokenExpiresAt = 0;
+interface AbyssAccount {
+  /** Row id, or null for the single-account secrets fallback. */
+  id: number | null;
+  label: string;
+  username: string;
+  password: string;
+}
 
-/** Returns a cached abyss Bearer token, logging in when needed/expired. */
-async function getAbyssToken(): Promise<string | null> {
-  if (abyssToken && Date.now() < abyssTokenExpiresAt) return abyssToken;
+/** Service-role client. Used only for the abyss_accounts table. */
+function serviceClient() {
+  const url = Deno.env.get("SUPABASE_URL");
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
-  const email = Deno.env.get("ABYSS_EMAIL");
-  const password = Deno.env.get("ABYSS_PASSWORD");
-  if (!email || !password) return null;
+/**
+ * Active accounts, least recently used first.
+ *
+ * last_used_at is stamped on every attempt (success or failure), so a working
+ * account moves to the back of the queue and the pool rotates instead of one
+ * account carrying every upload.
+ */
+async function listAbyssAccounts(): Promise<AbyssAccount[]> {
+  const sb = serviceClient();
+  if (!sb) return [];
+  try {
+    const { data, error } = await sb
+      .from("abyss_accounts")
+      .select("id, label, username, password, last_used_at")
+      .eq("is_active", true)
+      .order("last_used_at", { ascending: true, nullsFirst: true })
+      .order("id", { ascending: true });
+    if (error) {
+      console.error("abyss-sub could not read abyss_accounts", error.message);
+      return [];
+    }
+    return ((data ?? []) as Record<string, unknown>[])
+      .map((row) => ({
+        id: Number(row.id),
+        label: String(row.label ?? "").trim() || String(row.username ?? "").trim(),
+        username: String(row.username ?? "").trim(),
+        password: String(row.password ?? ""),
+      }))
+      .filter((a) => a.username !== "" && a.password !== "");
+  } catch (e) {
+    console.error("abyss-sub could not read abyss_accounts", e);
+    return [];
+  }
+}
 
+/** The old single-account secrets, used only when no account works. */
+function secretsAccount(): AbyssAccount | null {
+  const username = (Deno.env.get("ABYSS_EMAIL") ?? "").trim();
+  const password = Deno.env.get("ABYSS_PASSWORD") ?? "";
+  if (!username || !password) return null;
+  return { id: null, label: "ABYSS_EMAIL secret", username, password };
+}
+
+/** Bearer tokens are cached per account; abyss tokens last about an hour. */
+const tokenCache = new Map<string, { token: string; expiresAt: number }>();
+
+/**
+ * Which account last accepted an upload for a file id.
+ *
+ * A subtitle can only be attached by the account that owns the video, so for a
+ * video that belongs to a later candidate the earlier accounts are guaranteed
+ * to fail. Remembering the one that worked sends a retry straight to the right
+ * account, and stops wrong-account attempts from churning the rotation.
+ *
+ * Best effort: per function instance, oldest entries dropped.
+ */
+const fileOwners = new Map<string, string>();
+const FILE_OWNER_LIMIT = 500;
+
+function rememberOwner(fileId: string, account: AbyssAccount): void {
+  fileOwners.delete(fileId);
+  fileOwners.set(fileId, tokenKey(account));
+  while (fileOwners.size > FILE_OWNER_LIMIT) {
+    const oldest = fileOwners.keys().next().value;
+    if (oldest === undefined) break;
+    fileOwners.delete(oldest);
+  }
+}
+
+/** Moves the account that already worked for this file id to the front. */
+function ownerFirst(candidates: AbyssAccount[], fileId: string): AbyssAccount[] {
+  const preferred = fileOwners.get(fileId);
+  const index = preferred
+    ? candidates.findIndex((a) => tokenKey(a) === preferred)
+    : -1;
+  if (index <= 0) return candidates;
+  return [candidates[index], ...candidates.slice(0, index), ...candidates.slice(index + 1)];
+}
+
+function tokenKey(account: AbyssAccount): string {
+  return account.id === null ? "env" : `db:${account.id}`;
+}
+
+/** Logs in to abyss.to and returns the token plus its lifetime. */
+async function loginAbyss(
+  username: string,
+  password: string
+): Promise<{ token: string; ttlMs: number } | null> {
   let res: Response;
   try {
     res = await fetch(`${ABYSS_API_BASE}/auth/login`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email: username, password }),
     });
   } catch {
     return null;
@@ -157,9 +277,45 @@ async function getAbyssToken(): Promise<string | null> {
     ttlMs = exp > 100000 ? exp : exp * 1000; // seconds vs milliseconds
     ttlMs = Math.max(60_000, ttlMs - 60_000);
   }
-  abyssToken = token;
-  abyssTokenExpiresAt = Date.now() + ttlMs;
-  return token;
+  return { token, ttlMs };
+}
+
+/** Cached token for one account, logging in when missing or expired. */
+async function tokenForAccount(
+  account: AbyssAccount,
+  force = false
+): Promise<string | null> {
+  const key = tokenKey(account);
+  const hit = tokenCache.get(key);
+  if (!force && hit && Date.now() < hit.expiresAt) return hit.token;
+
+  const fresh = await loginAbyss(account.username, account.password);
+  if (!fresh) {
+    tokenCache.delete(key);
+    return null;
+  }
+  tokenCache.set(key, {
+    token: fresh.token,
+    expiresAt: Date.now() + fresh.ttlMs,
+  });
+  return fresh.token;
+}
+
+/** Records an attempt so the admin panel can show stale accounts. */
+async function markAccount(
+  id: number | null,
+  ok: boolean,
+  error: string | null
+): Promise<void> {
+  if (id === null) return;
+  const sb = serviceClient();
+  if (!sb) return;
+  try {
+    await sb.rpc("abyss_account_mark", { p_id: id, p_ok: ok, p_error: error });
+  } catch (e) {
+    // Tracking is best effort - never fail an upload over it.
+    console.error("abyss-sub could not record the account attempt", e);
+  }
 }
 
 interface AbyssSubtitle {
@@ -276,6 +432,80 @@ async function uploadAbyssSubtitle(
   }
 }
 
+/**
+ * One complete attempt with a single account: clear any existing subtitle for
+ * this language, then upload. Returns a readable reason when it fails, so the
+ * response can explain which accounts were tried and why they did not work.
+ */
+async function attemptSubtitleUpload(
+  account: AbyssAccount,
+  fileId: string,
+  language: Language,
+  srt: string
+): Promise<{ ok: true } | { ok: false; reason: string }> {
+  let token = await tokenForAccount(account);
+  if (!token) return { ok: false, reason: "could not sign in to abyss.to" };
+
+  // Remove any existing subtitle for this language (never touches the other).
+  try {
+    const listed = await listAbyssSubtitles(fileId, token);
+    if (listed.ok) {
+      for (const sub of listed.items) {
+        if (sub?.id && matchesLanguage(sub, language)) {
+          await deleteAbyssSubtitle(String(sub.id), token);
+        }
+      }
+    }
+  } catch (e) {
+    console.error("abyss-sub list/delete failed", e);
+  }
+
+  const uploaded = await uploadAbyssSubtitle(fileId, language, srt, token);
+
+  // An expired or revoked token is the usual failure. Get a fresh one and try
+  // this account once more before moving on to the next.
+  if (!uploaded.ok && (uploaded.status === 401 || uploaded.status === 403)) {
+    token = await tokenForAccount(account, true);
+    if (!token) return { ok: false, reason: "could not sign in to abyss.to" };
+    const retry = await uploadAbyssSubtitle(fileId, language, srt, token);
+    if (retry.ok) return { ok: true };
+    return {
+      ok: false,
+      reason: `abyss.to rejected the upload (${retry.status ?? "network error"})`,
+    };
+  }
+
+  if (uploaded.ok) return { ok: true };
+  return {
+    ok: false,
+    reason: uploaded.status ? `abyss.to returned ${uploaded.status}` : "network error",
+  };
+}
+
+/**
+ * Sign-in check for the admin panel's "Test" button. Never uploads anything.
+ * With no database accounts it falls back to the ABYSS_EMAIL secret.
+ */
+async function testAccounts(accountId: unknown): Promise<Response> {
+  const only = accountId === undefined || accountId === null ? null : Number(accountId);
+
+  let accounts = await listAbyssAccounts();
+  if (accounts.length === 0) {
+    const fallback = secretsAccount();
+    accounts = fallback ? [fallback] : [];
+  }
+  if (only !== null) accounts = accounts.filter((a) => a.id === only);
+
+  const results: { id: number | null; label: string; ok: boolean; error: string | null }[] = [];
+  for (const account of accounts) {
+    const token = await tokenForAccount(account, true);
+    const error = token ? null : "could not sign in to abyss.to";
+    if (!token) await markAccount(account.id, false, error);
+    results.push({ id: account.id, label: account.label, ok: Boolean(token), error });
+  }
+  return json({ success: true, results });
+}
+
 /* ------------------------------------------------------------------ */
 /* Handler                                                             */
 /* ------------------------------------------------------------------ */
@@ -322,11 +552,24 @@ Deno.serve(async (req: Request) => {
   if (!authorized) return fail("You are not authorized to upload subtitles.", 403);
 
   // 3. Validate the request body.
-  let body: { fileId?: unknown; language?: unknown; content?: unknown } | null = null;
+  let body:
+    | {
+        fileId?: unknown;
+        language?: unknown;
+        content?: unknown;
+        action?: unknown;
+        accountId?: unknown;
+      }
+    | null = null;
   try {
     body = await req.json();
   } catch {
     return fail("Invalid request body.", 400);
+  }
+
+  // 3a. The admin panel can ask which accounts still work (never uploads).
+  if (String(body?.action ?? "") === "test") {
+    return await testAccounts(body?.accountId);
   }
 
   const fileId = String(body?.fileId ?? "").trim();
@@ -344,33 +587,57 @@ Deno.serve(async (req: Request) => {
   const srt = textToSrt(content);
   if (!srt) return fail("Could not convert the subtitle file to SRT.", 400);
 
-  // 5. Authenticate with abyss.to.
-  const token = await getAbyssToken();
-  if (!token) return fail("Could not authenticate with Abyss.", 502);
+  // 5. Try each account in turn until one accepts the upload: least recently
+  //    used first, with the single-account secrets as the last resort.
+  const candidates = await listAbyssAccounts();
+  const fallback = secretsAccount();
+  if (fallback) candidates.push(fallback);
 
-  // 6. Remove any existing subtitle for this language (never touches the other).
-  try {
-    const listed = await listAbyssSubtitles(fileId, token);
-    if (listed.ok) {
-      for (const sub of listed.items) {
-        if (sub?.id && matchesLanguage(sub, language as Language)) {
-          await deleteAbyssSubtitle(String(sub.id), token);
-        }
-      }
+  if (candidates.length === 0) {
+    return fail(
+      "No abyss account is configured. Add one in the admin Subtitles tab, or set " +
+        "the ABYSS_EMAIL and ABYSS_PASSWORD secrets.",
+      502
+    );
+  }
+
+  // 6. Attempt the upload through each account until one succeeds, recording
+  //    every outcome so the admin panel can show which account has gone stale.
+  //    The account that accepted this file before goes first: only the owner of
+  //    the video can attach a subtitle to it, so that is where it will work.
+  const failures: string[] = [];
+  const ordered = ownerFirst(candidates, fileId);
+
+  for (const account of ordered) {
+    const attempt = await attemptSubtitleUpload(account, fileId, language as Language, srt);
+
+    if (attempt.ok) {
+      rememberOwner(fileId, account);
+      await markAccount(account.id, true, null);
+      return json({
+        success: true,
+        message: `${language} subtitle uploaded successfully${
+          account.id === null ? "" : ` via ${account.label}`
+        }.`,
+        account: account.id === null ? null : { id: account.id, label: account.label },
+      });
     }
-  } catch (e) {
-    console.error("abyss-sub list/delete failed", e);
+
+    failures.push(`${account.label}: ${attempt.reason}`);
+    console.error("abyss-sub attempt failed", account.label, attempt.reason);
+    await markAccount(account.id, false, attempt.reason);
   }
 
-  // 7. Upload the converted SRT.
-  const uploaded = await uploadAbyssSubtitle(fileId, language as Language, srt, token);
-  if (!uploaded.ok) {
-    console.error("abyss-sub upload failed", uploaded.status);
-    return fail("Failed to upload subtitle to Abyss.", 502);
-  }
-
-  return json({
-    success: true,
-    message: `${language} subtitle uploaded successfully.`,
-  });
+  // Every account failed - report which ones were tried and why, rather than
+  // a bare "upload failed" that leaves the admin guessing which account is bad.
+  return json(
+    {
+      success: false,
+      error: `Failed to upload the subtitle to Abyss. Tried ${failures.length} account${
+        failures.length === 1 ? "" : "s"
+      }.`,
+      detail: failures.join("; "),
+    },
+    502
+  );
 });

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { extractAbyssSlug } from "@/lib/abyss-slug";
 import { pushSubtitleToAbyss, type AbyssSubtitleLanguage } from "@/lib/abyss-sub";
+import { episodeLabel, toEpisodeNumber } from "@/lib/episode-number";
 import { Button, Field, inputCls } from "./ui";
 
 /**
@@ -65,7 +66,13 @@ export default function SubtitleUpdater() {
         .eq("anime_id", animeId)
         .order("episode_number");
       if (ignore) return;
-      setEpisodes((data as EpisodeOption[]) ?? []);
+      // numeric episode_number arrives as a string ("13.5") from PostgREST.
+      setEpisodes(
+        ((data as EpisodeOption[]) ?? []).map((e) => ({
+          ...e,
+          episode_number: toEpisodeNumber(e.episode_number),
+        }))
+      );
       setEpisodeId("");
     })();
     return () => {
@@ -161,7 +168,7 @@ export default function SubtitleUpdater() {
               </option>
               {abyssEpisodes.map((e) => (
                 <option key={e.id} value={e.id}>
-                  Ep {e.episode_number}
+                  Ep {episodeLabel(e.episode_number)}
                   {e.title ? ` — ${e.title}` : ""}
                 </option>
               ))}
@@ -229,9 +236,10 @@ export default function SubtitleUpdater() {
       </div>
 
       <p className="text-[12px] leading-5 text-muted">
-        Uploads run inside the <b className="text-white">abyss-sub</b> Supabase Edge Function. The
-        abyss email/password and JWT stay in the function&apos;s secrets and are never sent to this
-        browser.
+        Uploads run inside the <b className="text-white">abyss-sub</b> Supabase Edge Function, which
+        rotates through the abyss accounts above — if one account cannot sign in or the upload is
+        refused, the next one is tried automatically. The credentials and the abyss JWT stay on the
+        server and are never sent to this browser.
       </p>
     </div>
   );

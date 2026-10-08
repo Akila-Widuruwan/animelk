@@ -8,6 +8,7 @@ import { extractAbyssSlug, isAbyssUrl } from "@/lib/abyss-slug";
 import { normalizeSubtitle, guessLangCode, safeSubtitleName } from "@/lib/subtitle";
 import { pushSubtitleToAbyss, type AbyssSubtitleLanguage } from "@/lib/abyss-sub";
 import { Button, Field, Modal, StatusPill, inputCls } from "./ui";
+import { episodeLabel, toEpisodeNumber } from "@/lib/episode-number";
 
 interface SubtitleRow {
   url?: string;
@@ -34,11 +35,24 @@ interface Props {
   onClose: () => void;
 }
 
+/**
+ * episode_number is numeric, so PostgREST hands it back as a string ("13.5").
+ * Normalise on load so every consumer below can treat it as a number.
+ */
+function normalizeRows(data: unknown): EpisodeRow[] {
+  return ((data as EpisodeRow[]) ?? []).map((r) => ({
+    ...r,
+    episode_number: toEpisodeNumber(r.episode_number),
+  }));
+}
+
 export default function EpisodesManager({ anime, onClose }: Props) {
   const sb = supabaseBrowser();
   const [rows, setRows] = useState<EpisodeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Partial<EpisodeRow> | null>(null);
+  // The number field is a string so half-typed values like "13." survive.
+  const [epText, setEpText] = useState("");
   const [subLang, setSubLang] = useState("English");
   const [subBusy, setSubBusy] = useState(false);
   const [subMsg, setSubMsg] = useState("");
@@ -242,7 +256,7 @@ export default function EpisodesManager({ anime, onClose }: Props) {
         .eq("anime_id", anime.id)
         .order("episode_number");
       if (ignore) return;
-      setRows((data as unknown as EpisodeRow[]) ?? []);
+      setRows(normalizeRows(data));
       setLoading(false);
     }
     fetchAll();
@@ -258,8 +272,13 @@ export default function EpisodesManager({ anime, onClose }: Props) {
 
   const openAdd = () => {
     resetSubUpload();
+    // Continue from the highest number that exists, so a part 2 that starts at
+    // 13 suggests 14 — not 1. The field stays editable for a fresh set (enter
+    // 13 to start a new part) or a half episode (13.5).
+    const next = rows.length ? Math.max(...rows.map((r) => r.episode_number)) + 1 : 1;
+    setEpText(String(next));
     setEditing({
-      episode_number: rows.length ? Math.max(...rows.map((r) => r.episode_number)) + 1 : 1,
+      episode_number: next,
       title: "",
       video_url: "",
       thumbnail: "",
@@ -277,7 +296,7 @@ export default function EpisodesManager({ anime, onClose }: Props) {
     try {
       const vtt = normalizeSubtitle(await file.text());
       const name = safeSubtitleName(file.name);
-      const epNo = Number(editing.episode_number) || rows.length + 1;
+      const epNo = Number(epText) || rows.length + 1;
       const path = `${anime.id}/ep${epNo}/${Date.now()}-${name}`;
       const { error: upErr } = await sb.storage
         .from("subtitles")
@@ -309,6 +328,13 @@ export default function EpisodesManager({ anime, onClose }: Props) {
 
   const save = async () => {
     if (!editing) return;
+    const epNumber = Number(epText);
+    if (!Number.isFinite(epNumber) || epNumber <= 0) {
+      setError(
+        "Enter an episode number above 0 — whole numbers (13) and half episodes (13.5) are both fine."
+      );
+      return;
+    }
     setBusy(true);
     setError("");
     setSubMsg("");
@@ -327,7 +353,7 @@ export default function EpisodesManager({ anime, onClose }: Props) {
 
     const abyssId = extractAbyssSlug(editing.video_url ?? "");
     const payload = {
-      episode_number: Number(editing.episode_number),
+      episode_number: epNumber,
       title: editing.title?.trim() || null,
       video_url: editing.video_url?.trim() || null,
       thumbnail: editing.thumbnail?.trim() || null,
@@ -341,7 +367,17 @@ export default function EpisodesManager({ anime, onClose }: Props) {
       : await sb.from("episodes").insert({ ...payload, anime_id: anime.id });
     if (res.error) {
       setBusy(false);
-      setError(res.error.message);
+      // Say plainly what went wrong instead of showing the raw Postgres text.
+      const msg = res.error.message;
+      setError(
+        /23505|duplicate key/i.test(msg)
+          ? `Episode ${episodeLabel(epNumber)} already exists for this title.`
+          : // episode_number is still an integer column: the half-episode
+            // migration has not been run yet.
+            /invalid input syntax|22P02/i.test(msg)
+            ? "Decimal episode numbers (13.5) need a database update — run supabase/migrations/0011_episode_number_decimal.sql in the Supabase SQL editor."
+            : msg
+      );
       return;
     }
 
@@ -379,7 +415,7 @@ export default function EpisodesManager({ anime, onClose }: Props) {
     .some((p) => !isAbyssUrl(p));
 
   const remove = async (r: EpisodeRow) => {
-    if (!window.confirm(`Delete episode ${r.episode_number}?`)) return;
+    if (!window.confirm(`Delete episode ${episodeLabel(r.episode_number)}?`)) return;
     const { error: delErr } = await sb.from("episodes").delete().eq("id", r.id);
     if (delErr) window.alert(delErr.message);
     else await load();
@@ -432,7 +468,9 @@ export default function EpisodesManager({ anime, onClose }: Props) {
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id} className="border-t border-white/5">
-                  <td className="px-4 py-2.5 font-bold text-white">{r.episode_number}</td>
+                  <td className="px-4 py-2.5 font-bold text-white">
+                    {episodeLabel(r.episode_number)}
+                  </td>
                   <td className="px-4 py-2.5 text-white/80">{r.title ?? "—"}</td>
                   <td className="max-w-[200px] truncate px-4 py-2.5 text-muted">
                     {r.video_url ?? "—"}
@@ -455,6 +493,7 @@ export default function EpisodesManager({ anime, onClose }: Props) {
                         className="px-2.5 py-1"
                         onClick={() => {
                           resetSubUpload();
+                          setEpText(episodeLabel(r.episode_number));
                           setEditing(r);
                         }}
                       >
@@ -485,12 +524,16 @@ export default function EpisodesManager({ anime, onClose }: Props) {
             {editing.id ? "Edit Episode" : "Add Episode"}
           </h4>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <Field label="Number *">
+            <Field label="Episode number *">
               <input
                 type="number"
+                inputMode="decimal"
+                min={0}
+                step="any"
                 className={inputCls}
-                value={editing.episode_number ?? ""}
-                onChange={(e) => setEditing({ ...editing, episode_number: Number(e.target.value) })}
+                value={epText}
+                placeholder="e.g. 13 or 13.5"
+                onChange={(e) => setEpText(e.target.value)}
               />
             </Field>
             <Field label="Title">

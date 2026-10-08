@@ -18,6 +18,7 @@ import TmdbBrowser from "@/components/admin/TmdbBrowser";
 import CheckUrls from "@/components/admin/CheckUrls";
 import AiringSchedule from "@/components/admin/AiringSchedule";
 import SubtitleUpdater from "@/components/admin/SubtitleUpdater";
+import AbyssAccounts from "@/components/admin/AbyssAccounts";
 import Requests from "@/components/admin/Requests";
 import { Spinner } from "@/components/admin/ui";
 
@@ -113,7 +114,7 @@ function SetupNotice() {
     <div className="flex min-h-screen items-center justify-center bg-ink p-4">
       <div className="w-full max-w-xl rounded-2xl border border-white/10 bg-panel p-8">
         <h1 className="text-xl font-extrabold text-white">
-          ANIME<span className="text-gradient">LK</span> Admin
+          ANI<span className="text-gradient">LANKA</span> Admin
         </h1>
         <p className="mt-3 text-[14px] leading-7 text-body">
           Supabase is not configured yet. To activate the admin dashboard:
@@ -218,7 +219,7 @@ where id = '${session.user.id}';`}
       <header className="sticky top-0 z-40 border-b border-white/5 bg-panel">
         <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center justify-between px-4">
           <span className="text-lg font-extrabold text-white">
-            ANIME<span className="text-gradient">LK</span>{" "}
+            ANI<span className="text-gradient">LANKA</span>{" "}
             <span className="ml-2 rounded bg-primary/20 px-2 py-0.5 text-[11px] font-bold text-white">
               Admin
             </span>
@@ -269,7 +270,12 @@ where id = '${session.user.id}';`}
           {tab === "tmdb" && <TmdbBrowser />}
           {tab === "check" && <CheckUrls />}
           {tab === "airing" && <AiringSchedule />}
-          {tab === "subtitles" && <SubtitleUpdater />}
+          {tab === "subtitles" && (
+            <div>
+              <AbyssAccounts />
+              <SubtitleUpdater />
+            </div>
+          )}
           {tab === "settings" && <SettingsManager />}
         </main>
       </div>

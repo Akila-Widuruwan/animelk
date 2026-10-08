@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Anime } from "./anime";
 import { allAnime, isCompleted, isMovie, relatedAnime } from "./anime";
+import { toEpisodeNumber } from "./episode-number";
 
 export const isSupabaseConfigured = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -222,9 +223,13 @@ export async function fetchHome(): Promise<HomeData | null> {
           video_url: string | null;
         }[]) ?? [])) {
           if (!r.video_url) continue;
+          // episode_number is numeric, so it can arrive as a string: compare
+          // numbers, not text, or the newest episode of a 13-24 part is lost.
+          const n = toEpisodeNumber(r.episode_number);
+          if (!Number.isFinite(n)) continue;
           if (lastEp[r.anime_id] === undefined) orderedIds.push(r.anime_id);
-          if (lastEp[r.anime_id] === undefined || r.episode_number > lastEp[r.anime_id]) {
-            lastEp[r.anime_id] = r.episode_number;
+          if (lastEp[r.anime_id] === undefined || n > lastEp[r.anime_id]) {
+            lastEp[r.anime_id] = n;
           }
         }
       }
@@ -390,6 +395,40 @@ export async function getAnime(id: number): Promise<Anime | null> {
   }
 }
 
+/**
+ * Resolves a set of ids — a viewer's watchlist — to full catalog entries,
+ * keeping the caller's order and dropping titles switched off in the admin
+ * panel. Throws when the read fails, so callers can show an error instead of
+ * an empty list.
+ */
+export async function fetchAnimeByIds(ids: number[]): Promise<Anime[]> {
+  const wanted = [...new Set(ids)].filter(
+    (id) => Number.isInteger(id) && id > 0
+  );
+  if (wanted.length === 0) return [];
+
+  const sb = supabase();
+  if (!sb) {
+    const byId = new Map(allAnime.map((a) => [a.id, a]));
+    return wanted
+      .map((id) => byId.get(id))
+      .filter((a): a is Anime => Boolean(a));
+  }
+
+  const { data, error } = await sb
+    .from("anime")
+    .select("*, anime_genres(genres(name))")
+    .in("id", wanted);
+  if (error) throw new Error(error.message);
+
+  const byId = new Map(
+    (data as unknown as DbAnime[]).filter(isPublic).map((r) => [r.id, mapAnime(r)])
+  );
+  return wanted
+    .map((id) => byId.get(id))
+    .filter((a): a is Anime => Boolean(a));
+}
+
 export interface SubtitleTrack {
   url: string;
   label: string;
@@ -402,6 +441,9 @@ export interface SubtitleTrack {
 }
 
 export interface EpisodeMeta {
+  /** The episodes row id — used to attach watch progress to one episode. */
+  id: number;
+  /** Whole numbers (13) and half episodes (13.5); never assume it starts at 1. */
   episode_number: number;
   title: string | null;
   video_url: string | null;
@@ -418,13 +460,16 @@ export async function getEpisodes(animeId: number): Promise<EpisodeMeta[]> {
     const { data, error } = await sb
       .from("episodes")
       .select(
-        "episode_number, title, video_url, thumbnail, duration, is_premium, subtitles"
+        "id, episode_number, title, video_url, thumbnail, duration, is_premium, subtitles"
       )
       .eq("anime_id", animeId)
       .order("episode_number");
     if (error) return [];
     return ((data as unknown as EpisodeMeta[]) ?? []).map((e) => ({
       ...e,
+      // A numeric column comes back as a string from PostgREST; normalise it so
+      // callers can trust episode_number to be a number.
+      episode_number: toEpisodeNumber(e.episode_number),
       subtitles: Array.isArray(e.subtitles) ? e.subtitles : [],
     }));
   } catch {

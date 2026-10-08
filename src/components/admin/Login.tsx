@@ -40,7 +40,7 @@ export default function Login({
         className="w-full max-w-sm rounded-2xl border border-white/10 bg-panel p-8 shadow-2xl"
       >
         <h1 className="text-xl font-extrabold text-white">
-          ANIME<span className="text-gradient">LK</span> {heading}
+          ANI<span className="text-gradient">LANKA</span> {heading}
         </h1>
         <p className="mt-1 text-[13px] text-muted">{subtitle}</p>
 
@@ -52,7 +52,7 @@ export default function Login({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={inputCls}
-              placeholder="admin@animelk.com"
+              placeholder="admin@anilanka.com"
             />
           </Field>
           <Field label="Password">

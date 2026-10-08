@@ -80,7 +80,7 @@ export default function Footer() {
                 <IconPlay className="h-4 w-4 text-white" />
               </span>
               <span className="text-[20px] font-extrabold tracking-tight text-white">
-                ANIME<span className="text-gradient">LK</span>
+                ANI<span className="text-gradient">LANKA</span>
               </span>
             </Link>
             <p className="mt-5 max-w-sm text-[13.5px] leading-7 text-muted">
@@ -106,7 +106,7 @@ export default function Footer() {
             </div>
 
             <h6 className="mb-4 mt-8 text-[13px] font-bold uppercase tracking-wider text-white">
-              Download Animelk app
+              Download AniLanka app
             </h6>
             <div className="flex flex-wrap gap-3">
               <Link
@@ -176,7 +176,7 @@ export default function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/[0.06] pt-6 md:mt-14 md:flex-row">
           <p className="text-[13px] text-muted">
-            Copyright © 2026 ANIMELK. All rights reserved.
+            Copyright © 2026 AniLanka. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
             <Link href="#" className="text-[13px] font-medium text-muted transition hover:text-violet-2">

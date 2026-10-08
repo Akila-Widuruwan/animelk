@@ -6,10 +6,11 @@ import Link from "next/link";
 import type { Anime } from "@/lib/anime";
 import { ageRating, metaTime, qualityBadges, score, year } from "@/lib/anime";
 import type { SubtitleTrack } from "@/lib/db";
+import { fetchWatchlistIds, toggleWatchlist } from "@/lib/viewer-data";
+import { useViewer } from "@/lib/viewer-auth";
+import { readLocalWatchlist, setLocalListed } from "@/lib/watchlist-local";
 import { IconBookmark, IconCheck, IconShare, IconStar } from "../Icons";
 import ExternalPlayerButtons from "../ExternalPlayerButtons";
-
-const LS_KEY = "animelk-watchlist";
 
 interface Props {
   anime: Anime;
@@ -30,37 +31,46 @@ export default function AnimeWatchInfo({
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [listed, setListed] = useState(false);
+  const [listError, setListError] = useState("");
   const [copied, setCopied] = useState(false);
+  const { viewer, loading } = useViewer();
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      try {
-        const raw = localStorage.getItem(LS_KEY);
-        if (raw) {
-          setListed((JSON.parse(raw) as number[]).includes(anime.id));
-        }
-      } catch {
-        // storage unavailable
+    if (loading) return;
+    let cancelled = false;
+    void (async () => {
+      if (!viewer) {
+        if (!cancelled) setListed(readLocalWatchlist().includes(anime.id));
+        return;
       }
-    }, 0);
-    return () => clearTimeout(t);
-  }, [anime.id]);
+      try {
+        const ids = await fetchWatchlistIds();
+        if (!cancelled) setListed(ids.has(anime.id));
+      } catch {
+        if (!cancelled) setListed(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, viewer, anime.id]);
 
-  const toggleList = () => {
-    setListed((v) => {
-      const next = !v;
+  const toggleList = async () => {
+    const next = !listed;
+    setListed(next);
+    setListError("");
+    if (viewer) {
       try {
-        const raw = localStorage.getItem(LS_KEY);
-        const arr = raw ? (JSON.parse(raw) as number[]) : [];
-        const set = new Set(arr);
-        if (next) set.add(anime.id);
-        else set.delete(anime.id);
-        localStorage.setItem(LS_KEY, JSON.stringify([...set]));
-      } catch {
-        // storage unavailable
+        await toggleWatchlist(anime.id, next);
+      } catch (err) {
+        setListed(!next);
+        setListError(
+          err instanceof Error ? err.message : "Could not update your list."
+        );
       }
-      return next;
-    });
+      return;
+    }
+    setLocalListed(anime.id, next);
   };
 
   const share = async () => {
@@ -160,7 +170,7 @@ export default function AnimeWatchInfo({
 
         <div className="mt-5 flex flex-wrap gap-3">
           <button
-            onClick={toggleList}
+            onClick={() => void toggleList()}
             className={`flex h-11 items-center gap-2 rounded-full px-6 text-[13.5px] font-bold transition duration-200 ${
               listed
                 ? "border border-emerald-400/40 bg-emerald-400/10 text-emerald-300"
@@ -178,6 +188,21 @@ export default function AnimeWatchInfo({
             {copied ? "Link Copied" : "Share"}
           </button>
         </div>
+
+        {listError && (
+          <p className="mt-3 text-[12.5px] text-red-300">{listError}</p>
+        )}
+        {!viewer && !loading && (
+          <p className="mt-3 text-[12.5px] text-muted">
+            <Link
+              href={`/login?next=${encodeURIComponent(`/anime/${anime.id}`)}`}
+              className="font-bold text-violet-2 transition hover:text-white"
+            >
+              Sign in
+            </Link>{" "}
+            to keep this list on every device.
+          </p>
+        )}
 
         {videoUrl && (
           <div className="mt-6 border-t border-white/[0.06] pt-5">

@@ -106,10 +106,11 @@ export default function AbyssUploadSettings() {
       <div className="mt-5 rounded-lg border border-amber-400/30 bg-amber-400/5 p-4">
         <h4 className="mb-1 text-sm font-bold text-white">Subtitle uploads (secure)</h4>
         <p className="text-[12px] leading-5 text-muted">
-          Attaching subtitles to an abyss video no longer uses this settings row. It runs inside the{" "}
-          <b className="text-white">abyss-sub</b> Supabase Edge Function, where the abyss email and
-          password live as secrets — so they are never exposed to the browser or the public{" "}
-          <code>settings</code> table. Set them once with:
+          Attaching subtitles to an abyss video does not use this settings row. It runs inside the{" "}
+          <b className="text-white">abyss-sub</b> Supabase Edge Function, which rotates through the
+          accounts stored in <b className="text-white">Subtitles → Abyss Accounts</b>. That table is
+          closed to every browser. The single account below stays as a fallback for when no accounts
+          have been added yet — set it once with:
         </p>
         <pre className="mt-2 overflow-x-auto rounded-lg bg-ink p-3 text-left text-[11px] text-white/80">
 {`supabase secrets set ABYSS_EMAIL=you@example.com \\

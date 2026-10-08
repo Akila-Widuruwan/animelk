@@ -10,12 +10,12 @@ import("playwright").then(async ({ chromium }) => {
 
   await p.locator('button[aria-label="Account"]').click();
   await p.waitForTimeout(300);
-  const visible = await p.locator("text=Welcome to ANIMELK").isVisible();
+  const visible = await p.locator("text=Welcome to AniLanka").isVisible();
   console.log("dropdown visible after click:", visible);
 
   await p.mouse.click(600, 400);
   await p.waitForTimeout(300);
-  const closedOutside = !(await p.locator("text=Welcome to ANIMELK").isVisible());
+  const closedOutside = !(await p.locator("text=Welcome to AniLanka").isVisible());
   console.log("closes on outside click:", closedOutside);
   console.log("page errors:", errors.length ? errors : "none");
   await b.close();

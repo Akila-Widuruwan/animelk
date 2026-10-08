@@ -8,7 +8,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ANIMELK – Watch Anime Online",
+  title: "AniLanka – Watch Anime Online",
   description:
     "Stream the latest anime series and movies in HD. Watch trending anime, top-rated classics and new releases online for free.",
 };

@@ -82,7 +82,7 @@ export default function StaffPage() {
       <div className="flex min-h-screen items-center justify-center bg-ink p-4">
         <div className="w-full max-w-xl rounded-2xl border border-white/10 bg-panel p-8">
           <h1 className="text-xl font-extrabold text-white">
-            ANIME<span className="text-gradient">LK</span> Staff
+            ANI<span className="text-gradient">LANKA</span> Staff
           </h1>
           <p className="mt-3 text-[14px] leading-7 text-body">
             Supabase is not configured yet. Follow{" "}
@@ -130,7 +130,7 @@ where id = '${session.user.id}';`}
       <header className="sticky top-0 z-40 border-b border-white/5 bg-panel">
         <div className="mx-auto flex h-16 w-full max-w-[1400px] items-center justify-between px-4">
           <span className="text-lg font-extrabold text-white">
-            ANIME<span className="text-gradient">LK</span>{" "}
+            ANI<span className="text-gradient">LANKA</span>{" "}
             <span className="ml-2 rounded bg-primary/20 px-2 py-0.5 text-[11px] font-bold text-white">
               Staff
             </span>

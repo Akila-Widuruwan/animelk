@@ -13,6 +13,13 @@ import { IconChevronLeft, IconChevronRight } from "@/components/Icons";
 import { allAnime, db } from "@/lib/anime";
 import { getAnime, getEpisodes, getRelated } from "@/lib/db";
 import { isDirectMediaUrl, serverSources } from "@/lib/stream";
+import {
+  episodeLabel,
+  episodeNeighbours,
+  episodeNumbers,
+  resolveEpisodeNumber,
+  sameEpisode,
+} from "@/lib/episode-number";
 
 export function generateStaticParams() {
   return allAnime.map((a) => ({ id: String(a.id) }));
@@ -26,7 +33,7 @@ export async function generateMetadata({
   const { id } = await params;
   const anime = allAnime.find((a) => a.id === Number(id));
   return {
-    title: anime ? `Watch ${anime.title} – ANIMELK` : "ANIMELK",
+    title: anime ? `Watch ${anime.title} – AniLanka` : "AniLanka",
   };
 }
 
@@ -62,7 +69,7 @@ function EpisodeNavCard({
           {label}
         </span>
         <span className="block truncate text-[14px] font-bold text-white transition group-hover:text-violet-2">
-          Episode {ep}
+          Episode {episodeLabel(ep)}
           {title ? ` — ${title}` : ""}
         </span>
       </span>
@@ -86,10 +93,20 @@ export default async function WatchPage({
   if (!anime) notFound();
 
   const isMovie = anime.format === "MOVIE" || anime.format === "SPECIAL";
-  const maxDbEp = episodes.reduce((m, e) => Math.max(m, e.episode_number), 0);
-  const total = Math.max(anime.episodes || 1, maxDbEp, 1);
-  const ep = Math.min(Math.max(Number(epParam) || 1, 1), total);
-  const current = episodes.find((e) => e.episode_number === ep);
+  // Only the numbers that actually exist: a part 2 holds 13-24, a back
+  // catalogue may only have 5, 6 and 9, and half episodes (13.5) are valid.
+  // Without ?ep= the first available episode opens, so a title that starts at
+  // 13 no longer lands on an empty episode 1.
+  const numbers = episodeNumbers(episodes);
+  const ep = resolveEpisodeNumber(epParam, numbers);
+  const current = episodes.find((e) => sameEpisode(e.episode_number, ep)) ?? null;
+  const { prev: prevEp, next: nextEp } = episodeNeighbours(numbers, ep);
+  // Neighbours are adjacent in the list, so gaps and half numbers still step
+  // correctly (13.5 -> 14, never 13.5 -> 14.5).
+  const prev =
+    prevEp === null ? null : episodes.find((e) => sameEpisode(e.episode_number, prevEp)) ?? null;
+  const next =
+    nextEp === null ? null : episodes.find((e) => sameEpisode(e.episode_number, nextEp)) ?? null;
   const episodesWithVideo = episodes
     .filter((e) => e.video_url)
     .map((e) => e.episode_number);
@@ -98,9 +115,6 @@ export default async function WatchPage({
       .filter((e) => e.title)
       .map((e) => [e.episode_number, e.title as string])
   );
-
-  const prev = !isMovie && ep > 1 ? episodes.find((e) => e.episode_number === ep - 1) : null;
-  const next = !isMovie && ep < total ? episodes.find((e) => e.episode_number === ep + 1) : null;
 
   const externalPlayerUrl = current?.video_url
     ? serverSources(current.video_url)
@@ -113,11 +127,11 @@ export default async function WatchPage({
   const popular = db.topToday.filter((a) => a.id !== anime.id).slice(0, 7);
 
   const sidebar = (orientation: "vertical" | "horizontal") =>
-    !isMovie && total > 1 ? (
+    !isMovie && numbers.length > 1 ? (
       <EpisodeSidebar
         animeId={anime.id}
         currentEp={ep}
-        total={total}
+        numbers={numbers}
         episodeTitles={episodeTitles}
         withVideo={episodesWithVideo}
         orientation={orientation}
@@ -160,7 +174,7 @@ export default async function WatchPage({
             </Link>
             <IconChevronRight className="h-3.5 w-3.5 shrink-0 text-muted/50" />
             <span className="shrink-0 font-bold text-white">
-              {isMovie ? "Watch" : `Episode ${ep}`}
+              {isMovie ? "Watch" : `Episode ${episodeLabel(ep)}`}
             </span>
           </nav>
 
@@ -172,10 +186,13 @@ export default async function WatchPage({
                 ep={ep}
                 videoUrl={current?.video_url ?? null}
                 episodeTitle={current?.title ?? null}
+                episodeId={current?.id ?? null}
                 hasEpisodeRow={Boolean(current)}
                 subtitles={current?.subtitles ?? []}
                 hasPrevEpisode={Boolean(prev)}
                 hasNextEpisode={Boolean(next)}
+                prevEpisode={isMovie ? null : prevEp}
+                nextEpisode={isMovie ? null : nextEp}
               />
 
               {sidebar("horizontal")}
@@ -189,12 +206,12 @@ export default async function WatchPage({
                 subtitles={current?.subtitles ?? []}
               />
 
-              {!isMovie && total > 1 && (
+              {!isMovie && numbers.length > 1 && (
                 <div className="mt-8 grid gap-3 border-t border-white/[0.06] pt-6 sm:grid-cols-2">
-                  {prev ? (
+                  {prev && prevEp !== null ? (
                     <EpisodeNavCard
                       animeId={anime.id}
-                      ep={ep - 1}
+                      ep={prevEp}
                       label="Previous"
                       title={prev.title}
                       align="left"
@@ -202,10 +219,10 @@ export default async function WatchPage({
                   ) : (
                     <span className="hidden sm:block" />
                   )}
-                  {next ? (
+                  {next && nextEp !== null ? (
                     <EpisodeNavCard
                       animeId={anime.id}
-                      ep={ep + 1}
+                      ep={nextEp}
                       label="Next Episode"
                       title={next.title}
                       align="right"
@@ -233,7 +250,7 @@ export default async function WatchPage({
 
           {popular.length > 0 && (
             <section className="mt-14 pb-4">
-              <SectionHeading title="Popular on ANIMELK" href="#" />
+              <SectionHeading title="Popular on AniLanka" href="#" />
               <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">
                 {popular.map((a) => (
                   <AnimeCard key={a.id} anime={a} />

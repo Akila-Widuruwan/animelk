@@ -37,7 +37,7 @@ export default function ExternalPlayerButtons({
     : null;
 
   const extra = [
-    `S.title=${encodeURIComponent("ANIMELK")}`,
+    `S.title=${encodeURIComponent("AniLanka")}`,
     ...(subUrl
       ? [`S.subtitles_location=${encodeURIComponent(subUrl)}`]
       : []),

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { signOutViewer, useViewer } from "@/lib/viewer-auth";
 import {
   IconChevronDown,
   IconClose,
@@ -28,6 +30,13 @@ export default function Header({ solid = false }: { solid?: boolean }) {
   const [accountOpen, setAccountOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+  const { viewer } = useViewer();
+
+  // Google sign-in returns the visitor to the page they started on.
+  const loginHref = `/login?next=${encodeURIComponent(
+    pathname && pathname !== "/login" ? pathname : "/"
+  )}`;
 
   const isSticky = solid || sticky;
 
@@ -73,7 +82,7 @@ export default function Header({ solid = false }: { solid?: boolean }) {
               <IconPlay className="h-3.5 w-3.5 text-white md:h-4 md:w-4" />
             </span>
             <span className="text-[17px] font-extrabold tracking-tight text-white md:text-[20px]">
-              ANIME<span className="text-gradient">LK</span>
+              ANI<span className="text-gradient">LANKA</span>
             </span>
           </Link>
 
@@ -126,7 +135,19 @@ export default function Header({ solid = false }: { solid?: boolean }) {
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:border-primary/60 lg:w-auto lg:gap-1.5 lg:px-3.5"
                 aria-label="Account"
               >
-                <IconUser className="h-4 w-4" />
+                {viewer?.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={viewer.avatarUrl}
+                    alt=""
+                    width={28}
+                    height={28}
+                    referrerPolicy="no-referrer"
+                    className="h-7 w-7 rounded-full object-cover ring-1 ring-white/15"
+                  />
+                ) : (
+                  <IconUser className="h-4 w-4" />
+                )}
                 <IconChevronDown
                   className={`hidden h-3.5 w-3.5 opacity-70 transition duration-300 lg:block ${
                     accountOpen ? "rotate-180" : ""
@@ -136,36 +157,74 @@ export default function Header({ solid = false }: { solid?: boolean }) {
               {accountOpen && (
                 <div className="absolute right-0 top-full z-50 mt-3 w-[230px] overflow-hidden rounded-xl border border-white/10 bg-panel/95 shadow-[0_20px_50px_rgba(0,0,0,0.55)] backdrop-blur-xl">
                   <div className="border-b border-white/5 px-4 py-3.5">
-                    <p className="text-sm font-bold text-white">Welcome to ANIMELK</p>
-                    <p className="mt-1 text-xs leading-relaxed text-muted">
-                      Sign in to manage your watchlist
-                    </p>
+                    {viewer ? (
+                      <>
+                        <p className="truncate text-sm font-bold text-white">
+                          {viewer.name}
+                        </p>
+                        {viewer.email && (
+                          <p className="mt-0.5 truncate text-xs text-muted">
+                            {viewer.email}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm font-bold text-white">
+                          Welcome to AniLanka
+                        </p>
+                        <p className="mt-1 text-xs leading-relaxed text-muted">
+                          Sign in to sync your watchlist
+                        </p>
+                      </>
+                    )}
                   </div>
                   <div className="p-2">
                     <Link
-                      href="#"
+                      href="/my-list"
                       onClick={() => setAccountOpen(false)}
                       className="block rounded-lg px-3 py-2.5 text-[13px] font-semibold text-white/85 transition hover:bg-white/5 hover:text-white"
                     >
-                      Sign In
+                      My List
                     </Link>
-                    <Link
-                      href="#"
-                      onClick={() => setAccountOpen(false)}
-                      className="bg-gradient-btn mt-1 block rounded-lg px-3 py-2.5 text-center text-[13px] font-bold text-white transition hover:opacity-90"
-                    >
-                      Create Account
-                    </Link>
+                    {viewer ? (
+                      <button
+                        onClick={() => {
+                          setAccountOpen(false);
+                          void signOutViewer();
+                        }}
+                        className="block w-full rounded-lg px-3 py-2.5 text-left text-[13px] font-semibold text-white/85 transition hover:bg-white/5 hover:text-white"
+                      >
+                        Sign Out
+                      </button>
+                    ) : (
+                      <>
+                        <Link
+                          href={loginHref}
+                          onClick={() => setAccountOpen(false)}
+                          className="block rounded-lg px-3 py-2.5 text-[13px] font-semibold text-white/85 transition hover:bg-white/5 hover:text-white"
+                        >
+                          Sign In
+                        </Link>
+                        <Link
+                          href={loginHref}
+                          onClick={() => setAccountOpen(false)}
+                          className="bg-gradient-btn mt-1 block rounded-lg px-3 py-2.5 text-center text-[13px] font-bold text-white transition hover:opacity-90"
+                        >
+                          Create Account
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
             </div>
 
             <Link
-              href="#"
+              href={loginHref}
               className="bg-gradient-btn hidden rounded-full px-5 py-2.5 text-[13px] font-bold text-white shadow-[0_6px_18px_rgba(124,92,255,0.4)] transition hover:opacity-90 md:inline-flex"
             >
-              Sign Up
+              {viewer ? viewer.name.split(" ")[0] : "Sign Up"}
             </Link>
 
             <button
@@ -198,7 +257,7 @@ export default function Header({ solid = false }: { solid?: boolean }) {
           <div className="absolute left-0 top-0 flex h-full w-[300px] flex-col gap-6 overflow-y-auto border-r border-white/[0.06] bg-panel/95 p-6 backdrop-blur-xl [animation:ak-drawer-in_0.25s_ease]">
             <div className="flex items-center justify-between">
               <span className="text-[19px] font-extrabold text-white">
-                ANIME<span className="text-gradient">LK</span>
+                ANI<span className="text-gradient">LANKA</span>
               </span>
               <button
                 onClick={() => setOpen(false)}
@@ -223,13 +282,32 @@ export default function Header({ solid = false }: { solid?: boolean }) {
                   {item.sub && <IconChevronDown className="h-4 w-4 opacity-70" />}
                 </Link>
               ))}
+              <Link
+                href="/my-list"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-between rounded-lg px-3 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/5 hover:text-white"
+              >
+                My List
+              </Link>
             </nav>
             <Link
-              href="#"
+              href={loginHref}
+              onClick={() => setOpen(false)}
               className="bg-gradient-btn rounded-full px-5 py-3 text-center text-sm font-bold text-white"
             >
-              Sign Up
+              {viewer ? "My Account" : "Sign Up"}
             </Link>
+            {viewer && (
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  void signOutViewer();
+                }}
+                className="rounded-full border border-white/12 px-5 py-3 text-center text-sm font-bold text-white/85 transition hover:border-primary/60 hover:text-white"
+              >
+                Sign Out
+              </button>
+            )}
           </div>
         </div>
       )}

@@ -68,7 +68,7 @@ import("playwright").then(async ({ chromium }) => {
   console.log("prev card visible:", await p.locator("a[href*='watch?ep=3']", { hasText: "Previous" }).isVisible());
 
   console.log("More Like This:", await p.locator("text=More Like This").isVisible());
-  console.log("Popular on ANIMELK:", await p.locator("text=Popular on ANIMELK").isVisible());
+  console.log("Popular on AniLanka:", await p.locator("text=Popular on AniLanka").isVisible());
   console.log("Add to List:", await p.locator("text=Add to List").isVisible());
   console.log("Share:", await p.locator("text=Share").first().isVisible());
   await p.close();

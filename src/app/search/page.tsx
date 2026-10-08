@@ -5,7 +5,7 @@ import AnimeCard from "@/components/AnimeCard";
 import { searchAnime } from "@/lib/db";
 
 export const metadata: Metadata = {
-  title: "Search – ANIMELK",
+  title: "Search – AniLanka",
 };
 
 export default async function SearchPage({

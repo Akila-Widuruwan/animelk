@@ -36,7 +36,7 @@ export function buildTransferNotebook(opts: TransferNotebookOptions): string {
     cell_type: "markdown",
     metadata: {},
     source:
-      "# ANIMELK — remote transfer\n\nRuns entirely on Google's servers — your device/connection is not used.\n1. Downloads the direct video link\n2. Fixes container/audio for browser playback (MKV → MP4, DDP → AAC)\n" +
+      "# AniLanka — remote transfer\n\nRuns entirely on Google's servers — your device/connection is not used.\n1. Downloads the direct video link\n2. Fixes container/audio for browser playback (MKV → MP4, DDP → AAC)\n" +
       (r2 ? "3. Uploads to Cloudflare R2 with parallel multipart\n" : "") +
       (abyss ? `${r2 ? "4" : "3"}. Remote-uploads to abyss.to with your API key\n` : "") +
       (r2 ? `\nFinal step: copy the printed ${r2.publicUrl.replace(/\/+$/, "")}/... URL into the episode.` : "\nFinal step: copy the printed embed URL into the episode."),
@@ -259,7 +259,7 @@ export function buildTransferScript(opts: TransferNotebookOptions): string {
 
   const lines: string[] = [];
   lines.push(
-    "# ANIMELK local transfer script — run on YOUR machine (no Colab needed).",
+    "# AniLanka local transfer script — run on YOUR machine (no Colab needed).",
     "# Requires:  pip install requests boto3   +   ffmpeg/ffprobe in PATH (winget install ffmpeg)",
     "#            https://ffmpeg.org/download.html",
     "",

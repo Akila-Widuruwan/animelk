@@ -9,6 +9,12 @@ import {
 import Hls from "hls.js";
 import type { SubtitleTrack } from "@/lib/db";
 import { usePlayerLayout } from "@/lib/usePlayerLayout";
+import { episodeLabel } from "@/lib/episode-number";
+import {
+  CLOUD_SAVE_INTERVAL_MS,
+  fetchResumePosition,
+  saveWatchProgress,
+} from "@/lib/viewer-data";
 import SubtitleOverlay from "./SubtitleOverlay";
 
 const HLS_EXT = /\.(m3u8)(\?|$)/i;
@@ -25,8 +31,13 @@ interface Props {
   title?: string;
   animeTitle?: string;
   animeId?: number;
+  /** The episodes row this video belongs to, so progress is stored per episode. */
+  episodeId?: number | null;
   hasPrev?: boolean;
   hasNext?: boolean;
+  /** Explicit neighbour numbers — episodes are not always 1..N (13, 13.5, ...). */
+  prevEp?: number | null;
+  nextEp?: number | null;
   onNavigateEpisode?: (ep: number) => void;
 }
 
@@ -289,8 +300,11 @@ export default function CustomPlayer({
   title,
   animeTitle,
   animeId,
+  episodeId = null,
   hasPrev = false,
   hasNext = false,
+  prevEp = null,
+  nextEp = null,
   onNavigateEpisode,
 }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -300,6 +314,7 @@ export default function CustomPlayer({
   const draggingRef = useRef(false);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastCloudSave = useRef(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const isHls = HLS_EXT.test(videoUrl);
@@ -415,18 +430,38 @@ export default function CustomPlayer({
     setActiveSub(index);
   }, []);
 
-  const saveResume = useCallback(() => {
-    const v = videoRef.current;
-    if (!resumeKey || !v || !v.duration) return;
-    if (v.currentTime < RESUME_MIN || v.currentTime > v.duration - RESUME_MAX_MARGIN) {
-      return;
-    }
-    try {
-      localStorage.setItem(resumeKey, String(Math.floor(v.currentTime)));
-    } catch {
-      // storage unavailable
-    }
-  }, [resumeKey]);
+  /**
+   * Stores the current position: always in the browser, and for signed-in
+   * viewers in their account too (throttled while playing, forced when the
+   * page is hidden or left).
+   */
+  const saveResume = useCallback(
+    (cloud: "off" | "throttle" | "force" = "off") => {
+      const v = videoRef.current;
+      if (!resumeKey || !v || !v.duration) return;
+      if (
+        v.currentTime < RESUME_MIN ||
+        v.currentTime > v.duration - RESUME_MAX_MARGIN
+      ) {
+        return;
+      }
+      const seconds = Math.floor(v.currentTime);
+      try {
+        localStorage.setItem(resumeKey, String(seconds));
+      } catch {
+        // storage unavailable
+      }
+      if (!animeId || cloud === "off") return;
+      const now = Date.now();
+      if (cloud === "throttle" && now - lastCloudSave.current < CLOUD_SAVE_INTERVAL_MS) {
+        return;
+      }
+      lastCloudSave.current = now;
+      // Signed-out viewers simply have nothing to write; the call no-ops.
+      void saveWatchProgress({ animeId, episodeId, positionSeconds: seconds });
+    },
+    [resumeKey, animeId, episodeId]
+  );
 
   /* source setup */
   useEffect(() => {
@@ -511,19 +546,47 @@ export default function CustomPlayer({
     return () => v.removeEventListener("loadedmetadata", tryRestore);
   }, [resumeKey, videoUrl]);
 
+  /* resume restore from the account, for a viewer who never watched on this browser */
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !resumeKey || !animeId) return;
+    let cancelled = false;
+    const tryCloud = () => {
+      if (cancelled || !v.duration) return;
+      try {
+        if (localStorage.getItem(resumeKey)) return;
+      } catch {
+        // storage unavailable — fall through to the account copy
+      }
+      void fetchResumePosition(animeId, episodeId).then((seconds) => {
+        if (cancelled || seconds === null) return;
+        if (seconds > RESUME_MIN && seconds < v.duration - RESUME_MAX_MARGIN) {
+          v.currentTime = seconds;
+          setTime(seconds);
+        }
+      });
+    };
+    if (v.readyState >= 1) tryCloud();
+    v.addEventListener("loadedmetadata", tryCloud);
+    return () => {
+      cancelled = true;
+      v.removeEventListener("loadedmetadata", tryCloud);
+    };
+  }, [resumeKey, animeId, episodeId, videoUrl]);
+
   /* periodic progress saving */
   useEffect(() => {
     saveTimer.current = setInterval(() => {
-      if (videoRef.current && !videoRef.current.paused) saveResume();
+      if (videoRef.current && !videoRef.current.paused) saveResume("throttle");
     }, RESUME_SAVE_INTERVAL);
     const onHide = () => {
-      if (document.hidden) saveResume();
+      if (document.hidden) saveResume("force");
     };
     document.addEventListener("visibilitychange", onHide);
     return () => {
       if (saveTimer.current) clearInterval(saveTimer.current);
       document.removeEventListener("visibilitychange", onHide);
-      saveResume();
+      saveResume("force");
     };
   }, [saveResume]);
 
@@ -705,7 +768,9 @@ export default function CustomPlayer({
 
   const goEpisode = (next: boolean) => {
     if (!animeId || !ep || !onNavigateEpisode) return;
-    const target = next ? ep + 1 : ep - 1;
+    // Prefer the neighbour the page resolved from the real episode list, so
+    // gaps and half episodes step correctly; fall back to ep ± 1.
+    const target = next ? nextEp ?? ep + 1 : prevEp ?? ep - 1;
     onNavigateEpisode(target);
   };
 
@@ -789,7 +854,7 @@ export default function CustomPlayer({
               </I>
             </span>
             <span className="text-[15px] font-extrabold tracking-tight text-white">
-              ANIME<span className="text-gradient">LK</span>
+              ANI<span className="text-gradient">LANKA</span>
             </span>
             <span className="h-3.5 w-px shrink-0 bg-white/20" aria-hidden="true" />
             <span className="truncate text-[13px] font-semibold text-white/85">
@@ -797,7 +862,7 @@ export default function CustomPlayer({
             </span>
           </div>
           <div className="mt-1 pl-[38px] text-[11.5px] font-semibold text-white/55">
-            {ep ? `Episode ${ep}` : ""}
+            {ep ? `Episode ${episodeLabel(ep)}` : ""}
             {title ? ` · ${title}` : ""}
           </div>
         </div>

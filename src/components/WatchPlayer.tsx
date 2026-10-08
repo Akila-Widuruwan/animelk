@@ -29,10 +29,15 @@ interface Props {
   ep: number;
   videoUrl: string | null;
   episodeTitle?: string | null;
+  /** The episodes row this video belongs to, used to store watch progress. */
+  episodeId?: number | null;
   hasEpisodeRow?: boolean;
   subtitles?: SubtitleTrack[];
   hasPrevEpisode?: boolean;
   hasNextEpisode?: boolean;
+  /** The neighbouring episode numbers, resolved from the real episode list. */
+  prevEpisode?: number | null;
+  nextEpisode?: number | null;
 }
 
 export default function WatchPlayer({
@@ -40,10 +45,13 @@ export default function WatchPlayer({
   ep,
   videoUrl,
   episodeTitle,
+  episodeId = null,
   hasEpisodeRow,
   subtitles = [],
   hasPrevEpisode = false,
   hasNextEpisode = false,
+  prevEpisode = null,
+  nextEpisode = null,
 }: Props) {
   const router = useRouter();
   const [demo, setDemo] = useState(false);
@@ -161,8 +169,11 @@ export default function WatchPlayer({
           title={episodeTitle ?? undefined}
           animeTitle={anime.title}
           animeId={anime.id}
+          episodeId={episodeId}
           hasPrev={hasPrevEpisode}
           hasNext={hasNextEpisode}
+          prevEp={prevEpisode}
+          nextEp={nextEpisode}
           onNavigateEpisode={(n) =>
             router.push(`/anime/${anime.id}/watch?ep=${n}`)
           }
