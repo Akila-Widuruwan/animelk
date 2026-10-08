@@ -18,8 +18,6 @@ const MENU = [
   { label: "Home", href: "/#hero", sub: false },
   { label: "Anime", href: "/#browse", sub: true },
   { label: "Movies", href: "/#anime-movies", sub: false },
-  { label: "Series", href: "/#new-series", sub: false },
-  { label: "Genres", href: "/#categories", sub: true },
   { label: "Top Airing", href: "/#airing", sub: false, badge: "New" },
   { label: "Request Anime", href: "/request", sub: false },
 ];
