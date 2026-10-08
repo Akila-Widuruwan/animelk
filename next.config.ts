@@ -14,6 +14,11 @@ const IMAGE_HOSTS = [
 ];
 
 const nextConfig: NextConfig = {
+  // The dev server is reached through the Preview tab on the loopback IP, which
+  // Next treats as a cross-origin dev request and blocks. Without this the
+  // client bundle never hydrates in that tab and scroll-reveal sections stay
+  // invisible. Development only; unused in production builds.
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   images: {
     remotePatterns: IMAGE_HOSTS.map((hostname) => ({
       protocol: "https",

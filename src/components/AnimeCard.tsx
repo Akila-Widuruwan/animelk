@@ -24,7 +24,7 @@ export default function AnimeCard({ anime, variant = "grid", className = "", epi
     <div
       className={`group ${
         variant === "carousel"
-          ? "w-[max(140px,calc(50vw-30px))] shrink-0 snap-start sm:w-[176px] lg:w-[196px] xl:w-[216px]"
+          ? "w-[max(124px,calc(44vw-27px))] shrink-0 snap-start sm:w-[154px] lg:w-[172px] xl:w-[190px]"
           : "w-full"
       } ${className}`}
     >
@@ -38,7 +38,7 @@ export default function AnimeCard({ anime, variant = "grid", className = "", epi
             src={anime.coverImage}
             alt={anime.title}
             fill
-            sizes="(max-width:640px) 132px, (max-width:1280px) 25vw, 216px"
+            sizes="(max-width:640px) 132px, (max-width:1280px) 22vw, 190px"
             className="object-cover transition duration-300 group-hover:brightness-110"
           />
         ) : (

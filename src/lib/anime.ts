@@ -38,6 +38,45 @@ export const allAnime: Anime[] = (() => {
   return out;
 })();
 
+/**
+ * Full-length films, as opposed to episodic series. AniList stores this in the
+ * `format` column ("MOVIE"); everything else (TV, TV_SHORT, OVA, ONA, SPECIAL,
+ * MUSIC, ...) is treated as a series. The admin panel's Format dropdown writes
+ * this same value, so a title added as a movie lands here automatically.
+ */
+export function isMovie(a: Pick<Anime, "format">): boolean {
+  return String(a.format || "").trim().toUpperCase() === "MOVIE";
+}
+
+const COMPLETED_STATUSES = new Set(["completed", "finished", "ended"]);
+
+/**
+ * A title counts as "completed" only when its authoritative status field says
+ * so. Never infer completion from episode counts, dates or popularity.
+ */
+export function isCompleted(a: Anime): boolean {
+  const normalizedStatus = String(a.status || "").trim().toLowerCase();
+  return COMPLETED_STATUSES.has(normalizedStatus);
+}
+
+/** Movie titles, most recently released first. */
+export const movieAnime: Anime[] = allAnime
+  .filter(isMovie)
+  .sort(
+    (a, b) =>
+      (b.seasonYear || 0) - (a.seasonYear || 0) ||
+      b.averageScore - a.averageScore
+  );
+
+/** Completed titles, most recently released/updated first. */
+export const completedAnime: Anime[] = allAnime
+  .filter(isCompleted)
+  .sort(
+    (a, b) =>
+      (b.seasonYear || 0) - (a.seasonYear || 0) ||
+      b.averageScore - a.averageScore
+  );
+
 export const heroSlides = db.trending.filter((a) => a.bannerImage).slice(0, 6);
 
 export const librarySlides = [...db.trending, ...db.popular, ...db.movies]

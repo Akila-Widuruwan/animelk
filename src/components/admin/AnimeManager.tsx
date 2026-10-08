@@ -28,6 +28,7 @@ interface AnimeRow {
   top_position: number | null;
   trailer_url: string | null;
   completed: boolean;
+  is_active: boolean;
   anime_genres: { genres: { id: number; name: string } | null }[];
 }
 
@@ -57,6 +58,7 @@ interface FormState {
   top_position: string;
   trailer_url: string;
   completed: boolean;
+  is_active: boolean;
   genres: number[];
 }
 
@@ -81,6 +83,7 @@ const emptyForm = (): FormState => ({
   top_position: "",
   trailer_url: "",
   completed: false,
+  is_active: true,
   genres: [],
 });
 
@@ -174,6 +177,7 @@ export default function AnimeManager() {
       top_position: a.top_position ? String(a.top_position) : "",
       trailer_url: a.trailer_url ?? "",
       completed: Boolean(a.completed),
+      is_active: a.is_active !== false,
       genres: (a.anime_genres ?? [])
         .map((g) => g.genres?.id)
         .filter((n): n is number => Boolean(n)),
@@ -220,6 +224,7 @@ export default function AnimeManager() {
       top_position: form.top_position ? Number(form.top_position) : null,
       trailer_url: form.trailer_url.trim() || null,
       completed: form.completed,
+      is_active: form.is_active,
     };
 
     if (editing) {
@@ -301,6 +306,18 @@ export default function AnimeManager() {
     }
   };
 
+  // Show/hide a title on the public website. Optimistic: flip the row right
+  // away and roll back with an alert if the write fails.
+  const quickToggleActive = async (a: AnimeRow) => {
+    const next = a.is_active === false;
+    setAnime((prev) => prev.map((x) => (x.id === a.id ? { ...x, is_active: next } : x)));
+    const { error } = await sb.from("anime").update({ is_active: next }).eq("id", a.id);
+    if (error) {
+      setAnime((prev) => prev.map((x) => (x.id === a.id ? { ...x, is_active: a.is_active } : x)));
+      window.alert("Unable to update website visibility. Please try again.");
+    }
+  };
+
   const filtered = anime.filter((a) =>
     a.title.toLowerCase().includes(query.toLowerCase())
   );
@@ -361,10 +378,26 @@ export default function AnimeManager() {
                   <td className="px-4 py-3 text-white/80">{a.average_score ?? "—"}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
+                      {a.is_active === false && (
+                        <span className="rounded bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-300">
+                          Hidden
+                        </span>
+                      )}
                       {a.completed && <StatusPill ok text="Completed" />}
                       {a.is_trending && <StatusPill ok text="Trending" />}
                       {a.is_top && <StatusPill ok text={`Top ${a.top_position ?? ""}`} />}
                       {a.is_new && <StatusPill ok text="New" />}
+                      <button
+                        onClick={() => quickToggleActive(a)}
+                        title={a.is_active === false ? "Show on the website" : "Hide from the website"}
+                        className={`rounded px-2 py-0.5 text-[10px] font-bold transition ${
+                          a.is_active === false
+                            ? "bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
+                            : "bg-white/5 text-muted hover:bg-white/10 hover:text-white"
+                        }`}
+                      >
+                        {a.is_active === false ? "○ Off" : "● On"}
+                      </button>
                       <button
                         onClick={() => quickToggleCompleted(a)}
                         title={a.completed ? "Mark as not completed" : "Mark as completed"}
@@ -495,6 +528,38 @@ export default function AnimeManager() {
               <input type="number" className={inputCls} value={form.top_position} onChange={(e) => set("top_position", e.target.value)} />
             </Field>
           </div>
+
+          <Field label="Website visibility" className="mt-4">
+            <div className="flex items-center justify-between gap-4 rounded-lg border border-white/10 bg-ink px-4 py-3">
+              <div>
+                <p className="text-[13px] font-semibold text-white">
+                  Visible on website {form.is_active ? <span className="text-emerald-300">· ON</span> : <span className="text-amber-300">· OFF</span>}
+                </p>
+                <p className="mt-0.5 text-[12px] text-muted">
+                  Turn OFF to hide this anime from the homepage, search and its own pages.
+                  It stays listed here so you can turn it back on any time.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={form.is_active}
+                aria-label="Visible on website"
+                onClick={() => set("is_active", !form.is_active)}
+                className={`relative h-7 w-12 shrink-0 rounded-full border transition-colors duration-200 ${
+                  form.is_active
+                    ? "border-emerald-400/50 bg-emerald-500"
+                    : "border-white/15 bg-white/10"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200 ${
+                    form.is_active ? "left-[26px]" : "left-0.5"
+                  }`}
+                />
+              </button>
+            </div>
+          </Field>
 
           <Field label="Completed" className="mt-4">
             <div className="flex items-center justify-between gap-4 rounded-lg border border-white/10 bg-ink px-4 py-3">

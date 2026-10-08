@@ -1977,7 +1977,7 @@ insert into public.section_items (section_id, anime_id, position) values ((selec
 insert into public.section_items (section_id, anime_id, position) values ((select id from public.sections where slug = 'airing'), 103303, 10);
 insert into public.section_items (section_id, anime_id, position) values ((select id from public.sections where slug = 'airing'), 210031, 11);
 insert into public.section_items (section_id, anime_id, position) values ((select id from public.sections where slug = 'airing'), 197754, 12);
-insert into public.sections (slug, title, kind, panel, view_all_url, sort_order) values ('new-anime', 'New Anime', 'carousel', false, '#', 5);
+insert into public.sections (slug, title, kind, panel, view_all_url, sort_order) values ('new-anime', 'Completed Anime', 'carousel', false, '#', 5);
 insert into public.section_items (section_id, anime_id, position) values ((select id from public.sections where slug = 'new-anime'), 21856, 1);
 insert into public.section_items (section_id, anime_id, position) values ((select id from public.sections where slug = 'new-anime'), 110277, 2);
 insert into public.section_items (section_id, anime_id, position) values ((select id from public.sections where slug = 'new-anime'), 127230, 3);

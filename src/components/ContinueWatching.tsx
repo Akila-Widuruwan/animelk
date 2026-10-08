@@ -49,13 +49,20 @@ export default function ContinueWatching() {
 
       const ids = [...new Set(entries.map((e) => e.animeId))];
       const meta = new Map<number, { title: string; image: string | null; durationMin: number | null }>();
+      const hidden = new Set<number>();
       try {
         const sb = supabaseBrowser();
         const { data } = await sb
           .from("anime")
-          .select("id, title, cover_image, banner_image, duration")
+          .select("id, title, cover_image, banner_image, duration, is_active")
           .in("id", ids);
         for (const a of (data as Record<string, unknown>[] | null) ?? []) {
+          // Titles switched OFF in the admin panel are hidden from the public
+          // site, including this resume row.
+          if (a.is_active === false) {
+            hidden.add(a.id as number);
+            continue;
+          }
           meta.set(a.id as number, {
             title: a.title as string,
             image: (a.banner_image as string) || (a.cover_image as string) || null,
@@ -66,18 +73,20 @@ export default function ContinueWatching() {
         // fall back to static data below
       }
       const staticById = new Map(allAnime.map((a) => [a.id, a]));
-      const rows = entries.map((e) => {
-        const db = meta.get(e.animeId);
-        const st = staticById.get(e.animeId);
-        return {
-          animeId: e.animeId,
-          ep: e.ep,
-          time: e.time,
-          title: db?.title ?? st?.title ?? `Anime #${e.animeId}`,
-          image: db?.image ?? st?.bannerImage ?? st?.coverImage ?? null,
-          durationMin: db?.durationMin ?? (st && st.duration > 0 ? st.duration : null),
-        };
-      });
+      const rows = entries
+        .filter((e) => !hidden.has(e.animeId))
+        .map((e) => {
+          const db = meta.get(e.animeId);
+          const st = staticById.get(e.animeId);
+          return {
+            animeId: e.animeId,
+            ep: e.ep,
+            time: e.time,
+            title: db?.title ?? st?.title ?? `Anime #${e.animeId}`,
+            image: db?.image ?? st?.bannerImage ?? st?.coverImage ?? null,
+            durationMin: db?.durationMin ?? (st && st.duration > 0 ? st.duration : null),
+          };
+        });
 
       setItems(rows);
     };

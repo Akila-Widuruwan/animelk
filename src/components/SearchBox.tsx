@@ -103,7 +103,7 @@ export default function SearchBox({ onNavigate }: { onNavigate?: () => void }) {
       />
 
       {open && q.trim().length >= 2 && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-2 min-w-[280px] overflow-hidden rounded-xl border border-white/10 bg-panel/95 shadow-[0_20px_50px_rgba(0,0,0,0.55)] backdrop-blur-xl md:right-0 md:left-auto md:w-[320px]">
+        <div className="absolute left-0 right-0 top-full z-50 mt-2 min-w-0 overflow-hidden rounded-xl border border-white/10 bg-panel/95 shadow-[0_20px_50px_rgba(0,0,0,0.55)] backdrop-blur-xl md:right-0 md:left-auto md:w-[320px]">
           {loading && (
             <div className="space-y-3 p-3">
               {Array.from({ length: 3 }, (_, i) => (
