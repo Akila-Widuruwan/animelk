@@ -40,13 +40,18 @@ create index if not exists comments_anime_idx on public.comments (anime_id, crea
 alter table public.comments enable row level security;
 
 -- the whole thread is public, signed in or not
+-- (dropped first so re-running this file on a project that already has it
+-- succeeds instead of failing with "policy already exists")
+drop policy if exists "public read comments" on public.comments;
 create policy "public read comments" on public.comments
   for select using (true);
 
 -- signed-in viewers post as themselves, nothing else
+drop policy if exists "signed in viewers post comments" on public.comments;
 create policy "signed in viewers post comments" on public.comments
   for insert to authenticated with check (auth.uid() = user_id);
 
 -- and may take back only what they wrote
+drop policy if exists "viewers delete own comments" on public.comments;
 create policy "viewers delete own comments" on public.comments
   for delete to authenticated using (auth.uid() = user_id);
