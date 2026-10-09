@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import type { Anime } from "@/lib/anime";
 import type { SubtitleTrack } from "@/lib/db";
-import { streamUrl, serverSources } from "@/lib/stream";
-import type { VideoSource } from "@/lib/stream";
+import { streamUrl, serverSources, hintKind, probeSourceKind } from "@/lib/stream";
+import type { SourceKind, VideoSource } from "@/lib/stream";
 import { IconPlay } from "./Icons";
 import CustomPlayer from "./CustomPlayer";
 
@@ -19,10 +19,6 @@ const MkvPlayer = dynamic(() => import("./MkvPlayer"), {
     </div>
   ),
 });
-
-const VIDEO_EXT = /\.(mp4|webm|ogv|ogg|mov|m4v)(\?|$)/i;
-const HLS_EXT = /\.(m3u8)(\?|$)/i;
-const MKV_EXT = /\.(mkv)(\?|$)/i;
 
 interface Props {
   anime: Anime;
@@ -72,10 +68,33 @@ export default function WatchPlayer({
     s.url ? { ...s, url: streamUrl(s.url) } : s
   );
 
-  const isHls = !!rawUrl && HLS_EXT.test(rawUrl);
-  const isDirect = !!rawUrl && VIDEO_EXT.test(rawUrl);
-  const isMkv = !!rawUrl && MKV_EXT.test(rawUrl);
-  const isEmbed = !!rawUrl && !isHls && !isDirect && !isMkv;
+  // Most links say what they are in the URL. A MegaPlay-style
+  // `…/api/playlist.php?t=<token>` does not, so those are resolved by peeking
+  // at the response and then played with hls.js like any other stream.
+  const hint = hintKind(rawUrl);
+  const [probed, setProbed] = useState<{ url: string; kind: SourceKind } | null>(null);
+  const kind: SourceKind = !rawUrl
+    ? "unknown"
+    : hint !== "unknown"
+      ? hint
+      : probed?.url === rawUrl
+        ? probed.kind
+        : "unknown";
+  const isHls = kind === "hls";
+  const isDirect = kind === "video";
+  const isMkv = kind === "mkv";
+  const isEmbed = kind === "embed";
+
+  useEffect(() => {
+    if (!rawUrl || hint !== "unknown") return;
+    let ignore = false;
+    void probeSourceKind(rawUrl).then((resolved) => {
+      if (!ignore) setProbed({ url: rawUrl, kind: resolved });
+    });
+    return () => {
+      ignore = true;
+    };
+  }, [rawUrl, hint]);
 
   const serverRow =
     available.length > 1 ? (
@@ -139,12 +158,29 @@ export default function WatchPlayer({
     );
   }
 
+  // An empty source falls through to the placeholder below, not the spinner.
+  if (rawUrl && kind === "unknown") {
+    return (
+      <>
+        <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black shadow-[0_30px_80px_rgba(0,0,0,0.45)] ring-1 ring-white/[0.06]">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+            <span className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+            <span className="text-[12.5px] font-semibold text-white/60">
+              Preparing video…
+            </span>
+          </div>
+        </div>
+        {serverRow}
+      </>
+    );
+  }
+
   if (isEmbed) {
     return (
       <>
         <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black shadow-[0_30px_80px_rgba(0,0,0,0.45)] ring-1 ring-white/[0.06]">
-        <iframe
-          src={playableUrl ?? ""}
+          <iframe
+            src={playableUrl ?? ""}
             title={episodeTitle ? `Episode ${ep} — ${episodeTitle}` : `${anime.title} episode ${ep}`}
             className="absolute inset-0 h-full w-full"
             allowFullScreen
@@ -163,6 +199,7 @@ export default function WatchPlayer({
         <CustomPlayer
           key={playableUrl}
           videoUrl={playableUrl!}
+          hlsStream={isHls}
           poster={anime.bannerImage || anime.coverImage || undefined}
           subtitles={playableSubtitles}
           ep={ep}

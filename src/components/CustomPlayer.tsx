@@ -25,6 +25,11 @@ const RESUME_MAX_MARGIN = 30;
 
 interface Props {
   videoUrl: string;
+  /**
+   * Set by the resolver when the source is known to be an HLS playlist even
+   * though its URL carries no `.m3u8` extension (a `playlist.php?t=…` token).
+   */
+  hlsStream?: boolean;
   poster?: string | null;
   subtitles?: SubtitleTrack[];
   ep?: number;
@@ -294,6 +299,7 @@ const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
 export default function CustomPlayer({
   videoUrl,
+  hlsStream,
   poster,
   subtitles = [],
   ep,
@@ -317,7 +323,7 @@ export default function CustomPlayer({
   const lastCloudSave = useRef(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const isHls = HLS_EXT.test(videoUrl);
+  const isHls = hlsStream ?? HLS_EXT.test(videoUrl);
   const defaultSubIndex = Math.max(
     0,
     subtitles.findIndex((s) => s.default)
