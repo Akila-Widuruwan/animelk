@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import AdFreeSync from "@/components/AdFreeSync";
 import "./globals.css";
 
 /**
@@ -39,6 +40,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col" suppressHydrationWarning>
         {/* A plain async script tag, which React hoists into the document head. */}
         <script id="ad-gate" async src={AD_GATE_SRC} />
+        {/* Caches whether the signed-in viewer is on the ad-free list (see @/lib/ad-free). */}
+        <AdFreeSync />
         {children}
       </body>
     </html>

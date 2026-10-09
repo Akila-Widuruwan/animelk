@@ -19,10 +19,11 @@ import CheckUrls from "@/components/admin/CheckUrls";
 import AiringSchedule from "@/components/admin/AiringSchedule";
 import SubtitleUpdater from "@/components/admin/SubtitleUpdater";
 import AbyssAccounts from "@/components/admin/AbyssAccounts";
+import AdFreeAccounts from "@/components/admin/AdFreeAccounts";
 import Requests from "@/components/admin/Requests";
 import { Spinner } from "@/components/admin/ui";
 
-type Tab = "dashboard" | "submissions" | "requests" | "anime" | "sections" | "hero" | "topics" | "menu" | "tmdb" | "check" | "airing" | "subtitles" | "settings";
+type Tab = "dashboard" | "submissions" | "requests" | "anime" | "sections" | "hero" | "topics" | "menu" | "tmdb" | "check" | "airing" | "subtitles" | "adfree" | "settings";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "dashboard", label: "Dashboard" },
@@ -37,6 +38,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "check", label: "Check URLs" },
   { id: "airing", label: "Release Dates" },
   { id: "subtitles", label: "Subtitles" },
+  { id: "adfree", label: "🚫 Ad-free accounts" },
   { id: "settings", label: "Settings" },
 ];
 
@@ -276,6 +278,7 @@ where id = '${session.user.id}';`}
               <SubtitleUpdater />
             </div>
           )}
+          {tab === "adfree" && <AdFreeAccounts />}
           {tab === "settings" && <SettingsManager />}
         </main>
       </div>
