@@ -11,6 +11,13 @@ import { IconPlay } from "./Icons";
 
 const RESUME_PREFIX = "animelk-resume";
 
+/**
+ * The row is a fixed four-cell grid, never a carousel: viewers scroll the page
+ * instead of dragging it sideways, and a fifth entry would push a title onto a
+ * second line that has nothing next to it.
+ */
+const MAX_ITEMS = 4;
+
 interface ResumeItem {
   animeId: number;
   ep: number;
@@ -99,7 +106,10 @@ export default function ContinueWatching() {
     if (loading) return;
     let cancelled = false;
     void (async () => {
-      const rows = viewer ? await fetchContinueWatching(12) : await collectLocal();
+      const rows = (viewer ? await fetchContinueWatching(MAX_ITEMS) : await collectLocal()).slice(
+        0,
+        MAX_ITEMS
+      );
       if (!cancelled) setItems(rows);
     })();
     return () => {
@@ -114,7 +124,7 @@ export default function ContinueWatching() {
       <h5 className="mb-3 text-[18px] font-extrabold tracking-tight text-white sm:mb-4 sm:text-[20px] md:text-[22px]">
         Continue Watching
       </h5>
-      <div className="no-scrollbar -mx-2 flex snap-x snap-mandatory gap-3 overflow-x-auto px-2 pb-2 [-webkit-overflow-scrolling:touch] md:snap-proximity md:gap-5">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-5 lg:grid-cols-4">
         {items.map((it) => {
           const totalSec = it.durationMin ? it.durationMin * 60 : 0;
           const pct =
@@ -125,14 +135,14 @@ export default function ContinueWatching() {
             <Link
               key={`${it.animeId}-${it.ep}`}
               href={`/anime/${it.animeId}/watch?ep=${it.ep}`}
-              className="group relative aspect-video w-[74vw] max-w-[340px] shrink-0 snap-start overflow-hidden rounded-xl bg-panel ring-1 ring-white/[0.06] transition duration-300 hover:ring-primary/40 sm:w-[280px] md:w-[320px] lg:w-[340px]"
+              className="group relative aspect-video overflow-hidden rounded-xl bg-panel ring-1 ring-white/[0.06] transition duration-300 hover:ring-primary/40"
             >
               {it.image ? (
                 <Image
                   src={it.image}
                   alt={it.title}
                   fill
-                  sizes="(max-width:640px) 74vw, (max-width:768px) 280px, (max-width:1024px) 320px, 340px"
+                  sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw"
                   className="object-cover"
                 />
               ) : (

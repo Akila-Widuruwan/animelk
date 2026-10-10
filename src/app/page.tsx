@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import CategoryTiles from "@/components/CategoryTiles";
 import SectionHeading from "@/components/SectionHeading";
 import MediaRow from "@/components/MediaRow";
 import LatestEpisodeGrid from "@/components/LatestEpisodeGrid";
@@ -39,36 +38,8 @@ function Section({
   );
 }
 
-const DEFAULT_TOPICS = [
-  "Action",
-  "Romance",
-  "Isekai",
-  "Slice of Life",
-  "Mecha",
-  "Horror",
-  "Sports",
-  "Adventure",
-];
-
 function fallbackSections(): HomeSection[] {
-  const topicImages = DEFAULT_TOPICS.map((genre) => {
-    const hit = allAnime.find((a) => a.genres.includes(genre)) ?? allAnime[0];
-    return hit.coverImage;
-  });
   return [
-    {
-      slug: "categories",
-      title: "What are you interested in?",
-      kind: "topics",
-      panel: false,
-      viewAllUrl: "#",
-      items: [],
-      topics: DEFAULT_TOPICS.map((name, i) => ({
-        name,
-        color: ["#104aa8", "#7fb237", "#b56129", "#d38d30", "#b625ea", "#e023a7", "#18ba2d", "#590020"][i],
-        image: topicImages[i],
-      })),
-    },
     { slug: "latest-episode", title: "Latest Episode", kind: "carousel", panel: false, viewAllUrl: "#", items: db.airing.map((a) => ({ ...a, lastEpisode: a.episodes || 1 })), topics: null },
     { slug: "airing", title: "Airing Now", kind: "carousel", panel: false, viewAllUrl: "#", items: db.airing, topics: null },
     { slug: "completed-anime", title: "Completed Anime", kind: "carousel", panel: false, viewAllUrl: "#", items: completedAnime.slice(0, 24), topics: null },
@@ -84,7 +55,6 @@ function fallbackSections(): HomeSection[] {
 }
 
 const ANCHORS: Record<string, string> = {
-  categories: "categories",
   "latest-episode": "latest-episode",
   airing: "airing",
   "completed-anime": "completed-anime",
@@ -101,8 +71,6 @@ function SectionBody({ section }: { section: HomeSection }) {
   }
 
   switch (section.kind) {
-    case "topics":
-      return <CategoryTiles topics={section.topics ?? undefined} />;
     case "top10":
       return <TopTen items={section.items} />;
     case "slider":
@@ -117,7 +85,14 @@ function SectionBody({ section }: { section: HomeSection }) {
 export default async function Home() {
   const home = await fetchHome();
   const hero = home?.hero && home.hero.length > 0 ? home.hero : heroSlides;
-  const sections = home?.sections && home.sections.length > 0 ? home.sections : fallbackSections();
+  const sections = (
+    home?.sections && home.sections.length > 0 ? home.sections : fallbackSections()
+  ).filter(
+    // The genre-tile "What are you interested in?" row is gone from the home
+    // page. The topics data and the admin tab stay, so nothing is lost if the
+    // row is ever wanted again.
+    (s) => s.slug !== "categories" && s.kind !== "topics"
+  );
 
   return (
     <div className="bg-ink">
