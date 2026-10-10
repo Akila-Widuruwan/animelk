@@ -110,11 +110,11 @@ export default function ContinueWatching() {
   if (!items || items.length === 0) return null;
 
   return (
-    <section className="container-site mb-7 md:hidden">
-      <h5 className="mb-3 text-[18px] font-extrabold tracking-tight text-white">
+    <section className="container-site mb-4 sm:mb-6 lg:mb-8">
+      <h5 className="mb-3 text-[18px] font-extrabold tracking-tight text-white sm:mb-4 sm:text-[20px] md:text-[22px]">
         Continue Watching
       </h5>
-      <div className="no-scrollbar -mx-2 flex snap-x snap-mandatory gap-3 overflow-x-auto px-2 pb-2 [-webkit-overflow-scrolling:touch]">
+      <div className="no-scrollbar -mx-2 flex snap-x snap-mandatory gap-3 overflow-x-auto px-2 pb-2 [-webkit-overflow-scrolling:touch] md:snap-proximity md:gap-5">
         {items.map((it) => {
           const totalSec = it.durationMin ? it.durationMin * 60 : 0;
           const pct =
@@ -125,14 +125,14 @@ export default function ContinueWatching() {
             <Link
               key={`${it.animeId}-${it.ep}`}
               href={`/anime/${it.animeId}/watch?ep=${it.ep}`}
-              className="relative aspect-video w-[74vw] max-w-[340px] shrink-0 snap-start overflow-hidden rounded-xl bg-panel ring-1 ring-white/[0.06]"
+              className="group relative aspect-video w-[74vw] max-w-[340px] shrink-0 snap-start overflow-hidden rounded-xl bg-panel ring-1 ring-white/[0.06] transition duration-300 hover:ring-primary/40 sm:w-[280px] md:w-[320px] lg:w-[340px]"
             >
               {it.image ? (
                 <Image
                   src={it.image}
                   alt={it.title}
                   fill
-                  sizes="(max-width:640px) 74vw, 340px"
+                  sizes="(max-width:640px) 74vw, (max-width:768px) 280px, (max-width:1024px) 320px, 340px"
                   className="object-cover"
                 />
               ) : (
