@@ -467,8 +467,9 @@ export async function getEpisodes(animeId: number): Promise<EpisodeMeta[]> {
     if (error) return [];
     return ((data as unknown as EpisodeMeta[]) ?? []).map((e) => ({
       ...e,
-      // A numeric column comes back as a string from PostgREST; normalise it so
-      // callers can trust episode_number to be a number.
+      // A numeric column comes back as a number (or a string, depending on the
+      // PostgREST version); normalise it so callers can trust episode_number
+      // to be a number.
       episode_number: toEpisodeNumber(e.episode_number),
       subtitles: Array.isArray(e.subtitles) ? e.subtitles : [],
     }));

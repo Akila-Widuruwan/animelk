@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { isStaffRequest } from "@/lib/admin-auth";
 import { checkUrl } from "@/lib/checkUrls";
+import { toEpisodeNumber } from "@/lib/episode-number";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +9,8 @@ const CONCURRENCY = 6;
 
 interface EpisodeRow {
   anime_id: number;
-  episode_number: number;
+  /** A numeric column comes back from PostgREST as a number or a string. */
+  episode_number: number | string;
   video_url: string | null;
 }
 
@@ -63,7 +65,7 @@ export async function GET(request: Request) {
       .map((videoUrl, i) => ({
         animeId: e.anime_id,
         animeTitle: titleById.get(e.anime_id) ?? `Anime #${e.anime_id}`,
-        episode: e.episode_number,
+        episode: toEpisodeNumber(e.episode_number),
         server: i + 1,
         url: videoUrl,
       }))

@@ -2,6 +2,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabaseBrowser } from "./supabase-browser";
+import { toEpisodeNumber } from "./episode-number";
 
 /** Only titles watched for at least this long show up in Continue Watching. */
 export const RESUME_MIN_SECONDS = 60;
@@ -182,7 +183,7 @@ export async function fetchResumePosition(
 interface HistoryRow {
   anime_id: number;
   position_seconds: number;
-  episodes: { episode_number: number } | null;
+  episodes: { episode_number: number | string } | null;
   anime: {
     id: number;
     title: string;
@@ -225,7 +226,9 @@ export async function fetchContinueWatching(
     seen.add(row.anime_id);
     items.push({
       animeId: row.anime_id,
-      ep: row.episodes?.episode_number ?? 1,
+      // episode_number is numeric, so PostgREST hands it back as a number or a
+      // string ("13.5") — normalise it for the label and the link.
+      ep: row.episodes ? toEpisodeNumber(row.episodes.episode_number) : 1,
       time: row.position_seconds,
       title: anime.title,
       image: anime.banner_image || anime.cover_image || null,

@@ -24,6 +24,9 @@ create table if not exists public.ad_free_emails (
 
 -- Addresses are stored lower-cased, so both the lookup and the policy can
 -- compare them as plain text instead of asking Postgres for a case-fold.
+-- The update comes first, so an address added straight through the
+-- dashboard cannot break the constraint below when this file is re-run.
+update public.ad_free_emails set email = lower(email) where email <> lower(email);
 alter table public.ad_free_emails
   drop constraint if exists ad_free_emails_email_check;
 alter table public.ad_free_emails

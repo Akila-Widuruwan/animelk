@@ -244,52 +244,80 @@ alter table public.watch_history enable row level security;
 alter table public.ratings       enable row level security;
 
 -- everyone can read content
+drop policy if exists "public read genres" on public.genres;
 create policy "public read genres"        on public.genres        for select using (true);
+drop policy if exists "public read anime" on public.anime;
 create policy "public read anime"         on public.anime         for select using (true);
+drop policy if exists "public read anime_genres" on public.anime_genres;
 create policy "public read anime_genres"  on public.anime_genres  for select using (true);
+drop policy if exists "public read episodes" on public.episodes;
 create policy "public read episodes"      on public.episodes      for select using (true);
+drop policy if exists "public read topics" on public.topics;
 create policy "public read topics"        on public.topics        for select using (true);
+drop policy if exists "public read sections" on public.sections;
 create policy "public read sections"      on public.sections      for select using (true);
+drop policy if exists "public read section_items" on public.section_items;
 create policy "public read section_items" on public.section_items for select using (true);
+drop policy if exists "public read hero_slides" on public.hero_slides;
 create policy "public read hero_slides"   on public.hero_slides   for select using (true);
+drop policy if exists "public read menu_items" on public.menu_items;
 create policy "public read menu_items"    on public.menu_items    for select using (true);
+drop policy if exists "public read settings" on public.settings;
 create policy "public read settings"      on public.settings      for select using (true);
+drop policy if exists "public read profiles" on public.profiles;
 create policy "public read profiles"      on public.profiles      for select using (true);
 
 -- users manage only their own rows
+drop policy if exists "own watchlist" on public.watchlist;
 create policy "own watchlist" on public.watchlist
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "own watch_history" on public.watch_history;
 create policy "own watch_history" on public.watch_history
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "own ratings" on public.ratings;
 create policy "own ratings" on public.ratings
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "own profile select-update" on public.profiles;
 create policy "own profile select-update" on public.profiles
   for select using (auth.uid() = id);
+drop policy if exists "own profile update" on public.profiles;
 create policy "own profile update" on public.profiles
   for update using (auth.uid() = id) with check (auth.uid() = id);
+drop policy if exists "own profile insert" on public.profiles;
 create policy "own profile insert" on public.profiles
   for insert with check (auth.uid() = id);
 
 -- admins manage all content
+drop policy if exists "admin manage genres" on public.genres;
 create policy "admin manage genres"        on public.genres
   for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "admin manage anime" on public.anime;
 create policy "admin manage anime"         on public.anime
   for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "admin manage anime_genres" on public.anime_genres;
 create policy "admin manage anime_genres"  on public.anime_genres
   for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "admin manage episodes" on public.episodes;
 create policy "admin manage episodes"      on public.episodes
   for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "admin manage topics" on public.topics;
 create policy "admin manage topics"        on public.topics
   for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "admin manage sections" on public.sections;
 create policy "admin manage sections"      on public.sections
   for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "admin manage section_items" on public.section_items;
 create policy "admin manage section_items" on public.section_items
   for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "admin manage hero_slides" on public.hero_slides;
 create policy "admin manage hero_slides"   on public.hero_slides
   for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "admin manage menu_items" on public.menu_items;
 create policy "admin manage menu_items"    on public.menu_items
   for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "admin manage settings" on public.settings;
 create policy "admin manage settings"      on public.settings
   for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "admin manage profiles" on public.profiles;
 create policy "admin manage profiles"      on public.profiles
   for all using (public.is_admin()) with check (public.is_admin());

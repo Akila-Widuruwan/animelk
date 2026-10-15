@@ -8,7 +8,22 @@ import { extractAbyssSlug, isAbyssUrl } from "@/lib/abyss-slug";
 import { normalizeSubtitle, guessLangCode, safeSubtitleName } from "@/lib/subtitle";
 import { pushSubtitleToAbyss, type AbyssSubtitleLanguage } from "@/lib/abyss-sub";
 import { Button, Field, Modal, StatusPill, inputCls } from "./ui";
-import { episodeLabel, toEpisodeNumber } from "@/lib/episode-number";
+import {
+  episodeLabel,
+  halfEpisodeAfter,
+  nextEpisodeNumber,
+  parseEpisodeNumberText,
+  sanitizeEpisodeNumberText,
+  tidyEpisodeNumberText,
+  toEpisodeNumber,
+} from "@/lib/episode-number";
+
+/**
+ * The one-time database change that lets an episode number carry a decimal
+ * part. Shown in the panel when a half episode cannot be saved yet.
+ */
+const DECIMAL_COLUMN_SQL = `alter table public.episodes
+  alter column episode_number type numeric using episode_number::numeric;`;
 
 interface SubtitleRow {
   url?: string;
@@ -21,7 +36,8 @@ interface SubtitleRow {
 
 interface EpisodeRow {
   id: number;
-  episode_number: number;
+  /** A numeric column comes back from PostgREST as a number or a string. */
+  episode_number: number | string;
   title: string | null;
   video_url: string | null;
   thumbnail: string | null;
@@ -36,8 +52,10 @@ interface Props {
 }
 
 /**
- * episode_number is numeric, so PostgREST hands it back as a string ("13.5").
- * Normalise on load so every consumer below can treat it as a number.
+ * episode_number is numeric, so PostgREST can hand it back as a number
+ * ("13.5") or as a string, depending on the column type and the PostgREST
+ * version. Normalise on load so every consumer below can treat it as a
+ * number.
  */
 function normalizeRows(data: unknown): EpisodeRow[] {
   return ((data as EpisodeRow[]) ?? []).map((r) => ({
@@ -53,6 +71,9 @@ export default function EpisodesManager({ anime, onClose }: Props) {
   const [editing, setEditing] = useState<Partial<EpisodeRow> | null>(null);
   // The number field is a string so half-typed values like "13." survive.
   const [epText, setEpText] = useState("");
+  // false = the column is still an integer, so 12.5 cannot be stored yet.
+  const [decimalColumn, setDecimalColumn] = useState<boolean | null>(null);
+  const [sqlCopied, setSqlCopied] = useState(false);
   const [subLang, setSubLang] = useState("English");
   const [subBusy, setSubBusy] = useState(false);
   const [subMsg, setSubMsg] = useState("");
@@ -243,8 +264,27 @@ export default function EpisodesManager({ anime, onClose }: Props) {
       .select("*")
       .eq("anime_id", anime.id)
       .order("episode_number");
-    setRows((data as unknown as EpisodeRow[]) ?? []);
+    setRows(normalizeRows(data));
     setLoading(false);
+  }, [sb, anime.id]);
+
+  /**
+   * Whether episodes.episode_number can hold a decimal part.
+   *
+   * PostgREST parses a filter value with the column's own type, so filtering
+   * with "1.4" fails on an integer column ("invalid input syntax for type
+   * integer") and works on a numeric one. A failed save sets the same flag,
+   * so the panel always knows whether 12.5 can be stored.
+   */
+  const probeDecimalColumn = useCallback(async (): Promise<boolean> => {
+    const { error } = await sb
+      .from("episodes")
+      .select("id")
+      .eq("anime_id", anime.id)
+      .gt("episode_number", 1.4)
+      .limit(1);
+    if (!error) return true;
+    return !/22P02|invalid input syntax/i.test(error.message);
   }, [sb, anime.id]);
 
   useEffect(() => {
@@ -258,25 +298,32 @@ export default function EpisodesManager({ anime, onClose }: Props) {
       if (ignore) return;
       setRows(normalizeRows(data));
       setLoading(false);
+      const decimal = await probeDecimalColumn();
+      if (!ignore) setDecimalColumn(decimal);
     }
     fetchAll();
     return () => {
       ignore = true;
     };
-  }, [sb, anime.id]);
+  }, [sb, anime.id, probeDecimalColumn]);
 
   const resetSubUpload = () => {
     setSubFiles({ Sinhala: null, English: null });
     setSubSteps(null);
   };
 
-  const openAdd = () => {
+  /** The episode numbers that exist, as plain numbers. */
+  const existingNumbers = () => rows.map((r) => toEpisodeNumber(r.episode_number));
+
+  const openAdd = (suggestion?: number) => {
     resetSubUpload();
     // Continue from the highest number that exists, so a part 2 that starts at
     // 13 suggests 14 — not 1. The field stays editable for a fresh set (enter
     // 13 to start a new part) or a half episode (13.5).
-    const next = rows.length ? Math.max(...rows.map((r) => r.episode_number)) + 1 : 1;
-    setEpText(String(next));
+    const next =
+      suggestion ?? nextEpisodeNumber(existingNumbers());
+    setEpText(tidyEpisodeNumberText(String(next)));
+    setError("");
     setEditing({
       episode_number: next,
       title: "",
@@ -288,6 +335,11 @@ export default function EpisodesManager({ anime, onClose }: Props) {
     });
   };
 
+  /** Opens the form for the half episode that follows `n` (1 → 1.5). */
+  const openAddHalf = (n: number | string) => {
+    openAdd(halfEpisodeAfter(toEpisodeNumber(n)));
+  };
+
   const uploadSubtitleFile = async (file: File) => {
     if (!editing) return;
     setSubBusy(true);
@@ -296,8 +348,9 @@ export default function EpisodesManager({ anime, onClose }: Props) {
     try {
       const vtt = normalizeSubtitle(await file.text());
       const name = safeSubtitleName(file.name);
-      const epNo = Number(epText) || rows.length + 1;
-      const path = `${anime.id}/ep${epNo}/${Date.now()}-${name}`;
+      const epNo =
+        parseEpisodeNumberText(epText) ?? nextEpisodeNumber(existingNumbers());
+      const path = `${anime.id}/ep${tidyEpisodeNumberText(String(epNo))}/${Date.now()}-${name}`;
       const { error: upErr } = await sb.storage
         .from("subtitles")
         .upload(path, new Blob([vtt], { type: "text/vtt" }), {
@@ -328,8 +381,10 @@ export default function EpisodesManager({ anime, onClose }: Props) {
 
   const save = async () => {
     if (!editing) return;
-    const epNumber = Number(epText);
-    if (!Number.isFinite(epNumber) || epNumber <= 0) {
+    // The box holds text (a number input drops the decimal point while it is
+    // being typed), so the value is parsed here: 13 and 13.5 are both valid.
+    const epNumber = parseEpisodeNumberText(epText);
+    if (epNumber === null || epNumber <= 0) {
       setError(
         "Enter an episode number above 0 — whole numbers (13) and half episodes (13.5) are both fine."
       );
@@ -369,15 +424,18 @@ export default function EpisodesManager({ anime, onClose }: Props) {
       setBusy(false);
       // Say plainly what went wrong instead of showing the raw Postgres text.
       const msg = res.error.message;
-      setError(
-        /23505|duplicate key/i.test(msg)
-          ? `Episode ${episodeLabel(epNumber)} already exists for this title.`
-          : // episode_number is still an integer column: the half-episode
-            // migration has not been run yet.
-            /invalid input syntax|22P02/i.test(msg)
-            ? "Decimal episode numbers (13.5) need a database update — run supabase/migrations/0011_episode_number_decimal.sql in the Supabase SQL editor."
-            : msg
-      );
+      if (/23505|duplicate key/i.test(msg)) {
+        setError(`Episode ${episodeLabel(epNumber)} already exists for this title.`);
+      } else if (/invalid input syntax|22P02/i.test(msg)) {
+        // episode_number is still an integer column: the half-episode
+        // migration has not been run yet. The panel below shows the SQL.
+        setDecimalColumn(false);
+        setError(
+          "This episode number cannot be saved yet — the database still stores whole numbers only. Run the SQL below once, then save again."
+        );
+      } else {
+        setError(msg);
+      }
       return;
     }
 
@@ -421,14 +479,43 @@ export default function EpisodesManager({ anime, onClose }: Props) {
     else await load();
   };
 
+  const copyMigrationSql = async () => {
+    try {
+      await navigator.clipboard.writeText(DECIMAL_COLUMN_SQL);
+      setSqlCopied(true);
+      setTimeout(() => setSqlCopied(false), 2000);
+    } catch {
+      setSqlCopied(false);
+    }
+  };
+
   return (
     <Modal title={`Episodes — ${anime.title}`} onClose={onClose} wide>
       <div className="mb-4 flex items-center justify-between">
         <p className="text-[13px] text-muted">
           {rows.length} episode{rows.length === 1 ? "" : "s"}
         </p>
-        <Button onClick={openAdd}>+ Add Episode</Button>
+        <Button onClick={() => openAdd()}>+ Add Episode</Button>
       </div>
+
+      {decimalColumn === false && (
+        <div className="mb-4 rounded-xl border border-amber-400/30 bg-amber-400/10 p-3">
+          <p className="text-[13px] font-bold text-amber-200">
+            Half episodes (12.5) need a one-time database change
+          </p>
+          <p className="mt-1 text-[12px] leading-5 text-amber-100/80">
+            <code className="text-white">episodes.episode_number</code> is still an integer
+            column, so 12.5 cannot be stored yet. Run this once in the Supabase SQL editor
+            (safe to re-run) and reload the page.
+          </p>
+          <pre className="mt-2 overflow-x-auto rounded-lg bg-ink p-3 text-[11px] leading-5 text-white/85">
+            {DECIMAL_COLUMN_SQL}
+          </pre>
+          <Button variant="ghost" className="mt-2 px-2.5 py-1 text-xs" onClick={copyMigrationSql}>
+            {sqlCopied ? "Copied" : "Copy SQL"}
+          </Button>
+        </div>
+      )}
 
       {subSteps && (
         <div className="mb-4 rounded-xl border border-white/10 bg-ink p-3">
@@ -490,10 +577,21 @@ export default function EpisodesManager({ anime, onClose }: Props) {
                     <div className="flex justify-end gap-2">
                       <Button
                         variant="ghost"
+                        className="px-2 py-1 text-[11px]"
+                        title={`Add the half episode that follows ${episodeLabel(r.episode_number)} (e.g. ${
+                          halfEpisodeAfter(toEpisodeNumber(r.episode_number))
+                        })`}
+                        onClick={() => openAddHalf(r.episode_number)}
+                      >
+                        +½
+                      </Button>
+                      <Button
+                        variant="ghost"
                         className="px-2.5 py-1"
                         onClick={() => {
                           resetSubUpload();
                           setEpText(episodeLabel(r.episode_number));
+                          setError("");
                           setEditing(r);
                         }}
                       >
@@ -525,16 +623,24 @@ export default function EpisodesManager({ anime, onClose }: Props) {
           </h4>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <Field label="Episode number *">
-              <input
-                type="number"
-                inputMode="decimal"
-                min={0}
-                step="any"
-                className={inputCls}
-                value={epText}
-                placeholder="e.g. 13 or 13.5"
-                onChange={(e) => setEpText(e.target.value)}
-              />
+              <div>
+                {/* A text box, not type="number": the browser throws away the
+                    decimal point of a half-typed value ("13." reads as empty),
+                    so 13.5 could never be typed. */}
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  className={inputCls}
+                  value={epText}
+                  placeholder="e.g. 13 or 13.5"
+                  onChange={(e) => setEpText(sanitizeEpisodeNumberText(e.target.value))}
+                  onBlur={() => setEpText((t) => tidyEpisodeNumberText(t))}
+                />
+                <p className="mt-1.5 text-[11px] leading-4 text-muted">
+                  Whole (13) or half (13.5) numbers — 12.5 sits between 12 and 13.
+                </p>
+              </div>
             </Field>
             <Field label="Title">
               <input

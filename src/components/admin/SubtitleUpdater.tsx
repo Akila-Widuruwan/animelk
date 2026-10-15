@@ -66,7 +66,7 @@ export default function SubtitleUpdater() {
         .eq("anime_id", animeId)
         .order("episode_number");
       if (ignore) return;
-      // numeric episode_number arrives as a string ("13.5") from PostgREST.
+      // numeric episode_number arrives as a number or a string from PostgREST.
       setEpisodes(
         ((data as EpisodeOption[]) ?? []).map((e) => ({
           ...e,

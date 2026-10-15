@@ -14,6 +14,9 @@
 -- site now lists only the episodes that exist.
 --
 -- Run in the Supabase SQL editor (safe to re-run).
+--
+-- The admin panel (Admin -> Anime -> Episodes) checks the column type when
+-- it opens and shows this same SQL if a half episode cannot be saved yet.
 -- ============================================================
 
 alter table public.episodes
