@@ -14,6 +14,21 @@ including a future Supabase Storage public URL.
 
 ## 2. Apply the schema
 
+**The easy way:** open the Supabase SQL editor and paste the whole of
+[`supabase/all-migrations.sql`](./supabase/all-migrations.sql) (SQL editor →
+New query → paste → Run). It contains every migration in order, and every
+statement in it is safe to run again — tables and indexes use
+`if not exists`, and each policy is dropped before it is created. So it works
+on a brand new project *and* on one that already has some of the schema
+applied, and you can paste it a second time without hitting
+`policy "..." already exists` (SQLSTATE 42710).
+
+`supabase/all-migrations.sql` is generated: run `npm run db:migrations` after
+changing anything in `supabase/migrations/`, and `npm run db:check` to verify
+that every migration can still be re-run.
+
+The individual migrations, if you prefer to apply them one at a time:
+
 Open the Supabase SQL editor and run
 [`supabase/migrations/0001_init.sql`](./supabase/migrations/0001_init.sql).
 

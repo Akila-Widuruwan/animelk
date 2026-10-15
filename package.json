@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:seed": "node scripts/generate-seed.mjs"
+    "db:seed": "node scripts/generate-seed.mjs",
+    "db:migrations": "node scripts/build-migrations.mjs",
+    "db:check": "node scripts/check-migrations.mjs",
+    "check:episodes": "node scripts/check-episode-numbers.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.1",
