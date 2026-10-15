@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import type { CheckStatus } from "@/lib/checkUrls";
+import { episodeLabel } from "@/lib/episode-number";
 import { Button } from "./ui";
 
 interface CheckRow {
@@ -228,7 +229,9 @@ export default function CheckUrls() {
                     <td className="max-w-[220px] truncate px-4 py-2.5 font-semibold text-white">
                       {r.animeTitle}
                     </td>
-                    <td className="px-4 py-2.5 tabular-nums text-white/80">{r.episode}</td>
+                    <td className="px-4 py-2.5 tabular-nums text-white/80">
+                      {episodeLabel(r.episode)}
+                    </td>
                     <td className="px-4 py-2.5">
                       <span className="rounded bg-white/10 px-1.5 py-0.5 text-[11px] font-bold text-white/80">
                         0{r.server}

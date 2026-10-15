@@ -35,6 +35,11 @@ to change `episodes.episode_number` from `integer` to `numeric` — without it,
 to the anime's episode count, which invented boxes for episodes that do not
 exist; the site now lists only the episodes that are actually uploaded.
 
+Admin → Anime → Episodes takes 13 or 13.5 in the episode number box (the "+½"
+button next to an episode fills in the half episode that follows it). If the
+database still stores whole numbers only, the panel says so and shows the SQL
+to run — the migration is safe to re-run.
+
 Episode and movie comments need
 [`supabase/migrations/0012_comments.sql`](./supabase/migrations/0012_comments.sql)
 — it creates `comments` (public read, signed-in viewers write only their own

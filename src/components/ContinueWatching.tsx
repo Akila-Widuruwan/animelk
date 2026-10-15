@@ -7,6 +7,7 @@ import { supabaseBrowser } from "@/lib/supabase-browser";
 import { allAnime } from "@/lib/anime";
 import { fetchContinueWatching } from "@/lib/viewer-data";
 import { useViewer } from "@/lib/viewer-auth";
+import { episodeLabel } from "@/lib/episode-number";
 import { IconPlay } from "./Icons";
 
 const RESUME_PREFIX = "animelk-resume";
@@ -45,7 +46,8 @@ async function collectLocal(): Promise<ResumeItem[]> {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (!key || !key.startsWith(RESUME_PREFIX)) continue;
-      const m = key.match(/^animelk-resume-(\d+)-(\d+)$/);
+      // The episode part may be a half episode (1.5), not just a whole number.
+      const m = key.match(/^animelk-resume-(\d+)-(\d+(?:\.\d+)?)$/);
       if (!m) continue;
       const time = Number(localStorage.getItem(key));
       if (!Number.isFinite(time) || time < 60) continue;
@@ -159,7 +161,7 @@ export default function ContinueWatching() {
                   {it.title}
                 </span>
                 <span className="mt-0.5 block text-[11px] font-semibold text-white/70">
-                  Episode {it.ep}
+                  Episode {episodeLabel(it.ep)}
                   {remaining ? ` · ${remaining}` : ""}
                 </span>
                 {totalSec > 0 && (
