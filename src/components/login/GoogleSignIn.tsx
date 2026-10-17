@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signInWithGoogle, signOutViewer, useViewer } from "@/lib/viewer-auth";
+import { errorFromHash } from "@/lib/auth-errors";
 
 /** Set before leaving for Google so the return trip knows to move on. */
 const OAUTH_PENDING = "anilanka-oauth-pending";
+
+/** The fragment never changes under this component, so nothing to subscribe to. */
+const subscribeToNothing = () => () => {};
+const readHashError = () => errorFromHash(window.location.hash);
+const readNoHashError = () => "";
 
 /** Only in-site paths are accepted, so `?next=` cannot bounce a visitor off-site. */
 export function safeNext(raw: string | null): string {
@@ -38,40 +44,57 @@ function GoogleMark({ className = "h-[18px] w-[18px]" }: { className?: string })
   );
 }
 
-/** Reads the OAuth error Supabase sends back on the URL hash, if any. */
-function hashError(hash: string): string {
-  const params = new URLSearchParams(hash.replace(/^#/, ""));
-  const description = params.get("error_description") ?? params.get("error");
-  if (!description) return "";
-  return description.replace(/\+/g, " ");
-}
-
-export default function GoogleSignIn() {
+export default function GoogleSignIn({ initialError = "" }: { initialError?: string }) {
   const router = useRouter();
   const { viewer, loading } = useViewer();
   const [busy, setBusy] = useState(false);
+  // The server reads the query string. The fragment only exists in the
+  // browser, so it is read as an external store: React uses the empty server
+  // snapshot while hydrating and the real one immediately afterwards, which
+  // keeps the markup identical without a setState-in-effect round trip.
+  const [error, setError] = useState(initialError);
+  const hashError = useSyncExternalStore(
+    subscribeToNothing,
+    readHashError,
+    readNoHashError
+  );
+  const shownError = error || hashError;
 
-  // Read the URL once, during the first render, before supabase-js gets a
-  // chance to consume the OAuth tokens on the same URL.
-  const [urlState] = useState(() => {
-    if (typeof window === "undefined") return { next: "", error: "" };
-    return {
-      next: safeNext(new URLSearchParams(window.location.search).get("next")),
-      error: hashError(window.location.hash),
-    };
+  // Read `next` once, during the first render, before supabase-js gets a
+  // chance to consume the OAuth tokens on the same URL. It is only used from
+  // handlers and effects, so the server/client difference is harmless.
+  const [next] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return safeNext(new URLSearchParams(window.location.search).get("next"));
   });
-  const next = urlState.next;
-  const [error, setError] = useState(urlState.error);
 
   // A failed round trip must not leave the pending marker behind.
   useEffect(() => {
-    if (!urlState.error) return;
+    if (!shownError) return;
     try {
       sessionStorage.removeItem(OAUTH_PENDING);
     } catch {
       // storage unavailable
     }
-  }, [urlState.error]);
+  }, [shownError]);
+
+  // Drop the failure from the address bar once it has been read, otherwise a
+  // refresh (or a bookmark of this tab) replays an error that is already over.
+  // The hash is left alone: on a successful return it is what carries the
+  // session, and supabase-js reads it after this render.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    let changed = false;
+    for (const key of ["error", "error_code", "error_description"]) {
+      if (url.searchParams.has(key)) {
+        url.searchParams.delete(key);
+        changed = true;
+      }
+    }
+    if (changed) {
+      window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+    }
+  }, []);
 
   // Once the session appears after a Google round trip, continue where the
   // visitor was heading. A visitor who opens /login while already signed in
@@ -210,9 +233,9 @@ export default function GoogleSignIn() {
         profile picture.
       </p>
 
-      {error && (
+      {shownError && (
         <p className="mt-5 rounded-lg bg-red-500/10 px-3 py-2 text-[13px] text-red-300">
-          {error}
+          {shownError}
         </p>
       )}
 

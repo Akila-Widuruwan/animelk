@@ -181,27 +181,93 @@ console, so they are the last manual steps:
    not make sign-in work on their own. Google rejects anything unregistered
    with `redirect_uri_mismatch`.
 
+   Renaming the Netlify site does **not** change this URI, so sign-in keeps
+   working through Google without touching this client. If you keep the site's
+   own origin in **Authorized JavaScript origins** (not used by this flow),
+   swap it for the new origin there.
+
 2. **Supabase → Authentication → Providers → Google** → enable it, paste the
    **Client ID** and **Client secret** from the downloaded
    `client_secret_*.json`, Save.
 
 3. **Supabase → Authentication → URL Configuration** → set **Site URL** to
-   `https://animelk-368.netlify.app`, and add both origins the sign-in can
+   `https://anilanka.netlify.app`, and add both origins the sign-in can
    return to under **Redirect URLs**:
 
    ```
    http://127.0.0.1:3000/**
-   https://animelk-368.netlify.app/**
+   https://anilanka.netlify.app/**
    ```
 
    A missing entry is the usual cause of a redirect back to the Site URL
-   instead of the page the visitor started on. The Netlify origin is what the
-   Google client already lists, but the live site only serves `/login` after a
-   deploy that includes it (it answered 404 when this was written).
+   instead of the page the visitor started on. The browser half of the flow
+   builds `redirect_to` from `window.location.origin` (see
+   `src/lib/viewer-auth.ts`), so no code carries a hard-coded site address —
+   the allow list is the only place the domain has to be taught.
 
 4. While the OAuth consent screen is still in **Testing**, only accounts listed
    under **Test users** can sign in. Add yours, or publish the app (User type:
    External) when you want anyone to sign in.
+
+### When sign-in fails
+
+`error_code=bad_oauth_state` — “OAuth state not found or expired” — is the one
+auth error that is not about keys, URLs or the Google client. Supabase creates a
+short-lived row (`auth.flow_state`) when the browser leaves for Google, keeps it
+for **five minutes**, and looks it up when Google comes back. Nothing found
+means the attempt was older than that (an account chooser left open, a retry
+started in a second tab, or a bookmark of a failed callback), or the callback is
+being handled by a different Supabase project than the one that started the
+flow. Press **Continue with Google** again; if it fails instantly every time,
+compare `NEXT_PUBLIC_SUPABASE_URL` with the project whose
+`…supabase.co/auth/v1/callback` is registered on the Google client.
+
+Supabase delivers the failure by redirecting to the **Site URL** with `error`,
+`error_code` and `error_description` on the query string. `/login` explains
+those codes, and `/error` forwards to `/login` with the same parameters, so a
+Site URL that carries a path (for example `…/error`) still lands on a page with
+a retry button instead of a 404.
+
+### Renaming the Netlify site
+
+The Netlify subdomain is not a Supabase setting anywhere except the URL
+Configuration above, and nothing in the database stores it. Renaming is safe;
+these are the only places that have to be told:
+
+- **Supabase → Authentication → URL Configuration** — change **Site URL** to
+  the new origin and add `https://<new-name>.netlify.app/**` to **Redirect
+  URLs**. Until the new entry exists, Supabase treats the return address as
+  unlisted, silently falls back to **Site URL**, and the visitor lands on the
+  old, now-dead address after Google. Keep `http://127.0.0.1:3000/**` for
+  local work; if you test on Deploy Previews, add
+  `https://**--<new-name>.netlify.app/**` too.
+- **Google Cloud** — nothing to change for this flow: Google only ever sees
+  `https://dfkmewdqkwpkkwevhmzz.supabase.co/auth/v1/callback`.
+  Update the consent screen's app homepage/privacy links and any
+  Authorized JavaScript origins if you filled them in.
+- **Netlify** — env vars, build settings, deploy history and Git deploys are
+  properties of the site, not of its name, so they survive the rename. The old
+  `*.netlify.app` address stops resolving immediately and Netlify does not
+  redirect it, because the name is released. To keep old links working, create
+  a separate empty site named with the old address and deploy a `_redirects`
+  file:
+
+  ```
+  # old site only
+  https://animelk-368.netlify.app/*  https://anilanka.netlify.app/:splat  301!
+  ```
+
+- **Database** — nothing to migrate. Google identity is keyed by the account's
+  Google ID in `auth.users`, not by the site address, so the same Google
+  account still owns the same `profiles` row, watchlist, watch history,
+  ratings and comments. RLS policies and storage buckets never look at the
+  origin. Visitors will have to press **Continue with Google** once on the new
+  domain, because the stored session and any signed-out `localStorage` list
+  belong to the old origin.
+- **Ads** — the Monetag zone (`public/ad-gate.js`) verifies the hostname. Add
+  the new domain to the zone in the Monetag dashboard, and expect existing
+  push subscribers to re-subscribe, since the service worker registration is
+  per origin.
 
 Both halves can be checked without a browser:
 
