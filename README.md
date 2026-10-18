@@ -29,6 +29,12 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Self-hosted video links (mixed content)
+
+Episode links pointing at your own file server (e.g. `http://anilanka.akizzzvpn.ggff.net:7658/file/<name>.mp4`) are automatically routed through `/api/stream`. This is required: the site is served over HTTPS, and browsers block plain-`http://` video on an HTTPS page (mixed content) — the link works when pasted into a tab but never loads inside the player.
+
+`anilanka.akizzzvpn.ggff.net` is allowed out of the box. To allow more hosts, set the comma-separated env var `NEXT_PUBLIC_PROXY_MEDIA_HOSTS` (e.g. `media.example.com,*.files.example.com`) and rebuild — `*.domain` entries match all subdomains. Only allowlisted hosts are proxied, so the route never becomes an open proxy.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.

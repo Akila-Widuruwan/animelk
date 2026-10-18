@@ -1,10 +1,17 @@
 import { NextRequest } from "next/server";
-import { isArchiveUrl, isPcloudUrl } from "@/lib/stream";
+import { isProxyableUrl } from "@/lib/stream";
 
 export const dynamic = "force-dynamic";
 
 const READAHEAD = 8 * 1024 * 1024;
 const CACHE_MAX_BYTES = 96 * 1024 * 1024;
+
+/**
+ * Some origin servers (including small self-hosted ones) reject requests that
+ * arrive without a browser-like User-Agent, so every upstream fetch carries one.
+ */
+const UPSTREAM_UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
 interface Chunk {
   start: number;
@@ -21,7 +28,7 @@ async function resolveTotal(target: string, fallback: number): Promise<number> {
   if (hit && Date.now() - hit.at < TOTAL_TTL) return hit.total;
   try {
     const probe = await fetch(target, {
-      headers: { Range: "bytes=0-0" },
+      headers: { Range: "bytes=0-0", "user-agent": UPSTREAM_UA },
       redirect: "follow",
     });
     const cr = probe.headers.get("content-range");
@@ -92,7 +99,7 @@ function parseRange(header: string | null): { start: number; end: number | null 
 
 async function fetchRange(url: string, start: number, end: number): Promise<Buffer> {
   const r = await fetch(url, {
-    headers: { Range: `bytes=${start}-${end}` },
+    headers: { Range: `bytes=${start}-${end}`, "user-agent": UPSTREAM_UA },
     redirect: "follow",
   });
   if (r.status !== 206) throw new Error("upstream range unsupported");
@@ -142,7 +149,7 @@ async function getBytes(
 
 function resolveTarget(request: NextRequest): string | null {
   const target = request.nextUrl.searchParams.get("url");
-  if (!target || (!isArchiveUrl(target) && !isPcloudUrl(target))) return null;
+  if (!target || !isProxyableUrl(target)) return null;
   return target;
 }
 
@@ -152,20 +159,29 @@ export async function HEAD(request: NextRequest) {
 
   const upstream = await fetch(target, {
     method: "GET",
-    headers: { Range: "bytes=0-0" },
+    headers: { Range: "bytes=0-0", "user-agent": UPSTREAM_UA },
     redirect: "follow",
   });
 
-  if (upstream.status !== 206) {
+  if (upstream.status !== 206 && !upstream.ok) {
+    void upstream.body?.cancel().catch(() => {});
     return new Response("Upstream fetch failed", { status: 502 });
   }
+  // The body was only opened to read the headers; drop it without draining.
+  void upstream.body?.cancel().catch(() => {});
 
   const headers = new Headers();
   headers.set("Content-Type", mimeFor(target));
   headers.set("Accept-Ranges", "bytes");
   headers.set("Cache-Control", "no-store");
-  const contentLength = upstream.headers.get("content-range")?.split("/")[1];
-  if (contentLength) headers.set("Content-Length", contentLength);
+  if (upstream.status === 206) {
+    const contentLength = upstream.headers.get("content-range")?.split("/")[1];
+    if (contentLength) headers.set("Content-Length", contentLength);
+  } else {
+    // An origin that ignores Range answered with the whole file.
+    const contentLength = upstream.headers.get("content-length");
+    if (contentLength) headers.set("Content-Length", contentLength);
+  }
 
   return new Response(null, { status: 200, headers });
 }
@@ -195,7 +211,9 @@ export async function GET(request: NextRequest) {
   }
 
   const upstream = await fetch(target, {
-    headers: range ? { Range: request.headers.get("range")! } : {},
+    headers: range
+      ? { Range: request.headers.get("range")!, "user-agent": UPSTREAM_UA }
+      : { "user-agent": UPSTREAM_UA },
     redirect: "follow",
   });
 
@@ -209,12 +227,12 @@ export async function GET(request: NextRequest) {
   headers.set("Content-Type", mime);
   headers.set("Accept-Ranges", "bytes");
   headers.set("Cache-Control", "no-store");
+  const contentLength = upstream.headers.get("content-length");
   if (upstream.status === 206) {
     const contentRange = upstream.headers.get("content-range");
     if (contentRange) headers.set("Content-Range", contentRange);
-    const contentLength = upstream.headers.get("content-length");
-    if (contentLength) headers.set("Content-Length", contentLength);
   }
+  if (contentLength) headers.set("Content-Length", contentLength);
 
   return new Response(upstream.body, {
     status: upstream.status,

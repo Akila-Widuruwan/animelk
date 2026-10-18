@@ -25,8 +25,49 @@ export function isPcloudUrl(value: string): boolean {
   }
 }
 
+/**
+ * Self-hosted media servers — your own file hosts, e.g. a VPS serving
+ * `http://anilanka.akizzzvpn.ggff.net:7658/file/<name>.mp4`.
+ *
+ * These are frequently plain `http://`, which browsers refuse to load from an
+ * `https://` page (mixed content): Chrome auto-upgrades the request to `https`
+ * on the same port, the TLS handshake fails and the player errors out even
+ * though the link opens fine when pasted into a tab. Routing them through the
+ * same `/api/stream` proxy as archive.org and pCloud fixes that — the fetch
+ * happens server-side, where `http://` is perfectly fine.
+ *
+ * Matching is on the hostname only, so any port works. Extend the list with
+ * the comma-separated `NEXT_PUBLIC_PROXY_MEDIA_HOSTS` env var (no redeploy
+ * needed to keep the built-in default); an entry of the form `*.example.com`
+ * matches every subdomain.
+ */
+const DEFAULT_PROXY_MEDIA_HOSTS = ["anilanka.akizzzvpn.ggff.net"];
+
+function proxyMediaHostPatterns(): string[] {
+  const extra = (process.env.NEXT_PUBLIC_PROXY_MEDIA_HOSTS ?? "")
+    .split(",")
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean);
+  return [...DEFAULT_PROXY_MEDIA_HOSTS, ...extra];
+}
+
+export function isSelfHostedUrl(value: string): boolean {
+  try {
+    const u = new URL(value);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+    const hostname = u.hostname.toLowerCase();
+    return proxyMediaHostPatterns().some((pattern) =>
+      pattern.startsWith("*.")
+        ? hostname.endsWith(pattern.slice(1))
+        : hostname === pattern
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function isProxyableUrl(value: string): boolean {
-  return isArchiveUrl(value) || isPcloudUrl(value);
+  return isArchiveUrl(value) || isPcloudUrl(value) || isSelfHostedUrl(value);
 }
 
 export function streamUrl(value: string): string {
